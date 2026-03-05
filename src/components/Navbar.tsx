@@ -1,19 +1,23 @@
 type Tab = "recruiter-prep" | "reflections"
 
 interface NavbarProps {
-  activeTab: Tab
+  activeTab: Tab | null
   onTabChange: (tab: Tab) => void
+  onHome: () => void
   onOpenResume: () => void
   onOpenExperience: () => void
 }
 
-export default function Navbar({ activeTab, onTabChange, onOpenResume, onOpenExperience }: NavbarProps) {
+export default function Navbar({ activeTab, onTabChange, onHome, onOpenResume, onOpenExperience }: NavbarProps) {
   return (
     <nav className="border-b border-gray-200 bg-white px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <span className="font-semibold text-gray-900 text-sm tracking-tight">
+        <button
+          onClick={onHome}
+          className="font-semibold text-gray-900 text-sm tracking-tight hover:text-gray-600 transition-colors"
+        >
           Job Search Assistant
-        </span>
+        </button>
         <div className="flex gap-1">
           <TabButton
             label="Recruiter Prep"
