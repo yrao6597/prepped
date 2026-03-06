@@ -14,6 +14,21 @@ export interface PrepGuideInput {
   experience: string
 }
 
+export type InterviewOutcome = "passed" | "failed" | "pending"
+
+export interface Reflection {
+  id: string
+  company: string
+  role: string
+  date: string
+  interviewType: string
+  questionsAsked: string
+  wentWell: string
+  didntGoWell: string
+  outcome: InterviewOutcome
+  createdAt: string
+}
+
 export type AsyncState<T> =
   | { status: "idle" }
   | { status: "loading" }

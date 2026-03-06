@@ -1,10 +1,11 @@
-import type { PrepGuide } from "../types"
+import type { PrepGuide, Reflection } from "../types"
 
 const STORAGE_VERSION = "1"
 const KEY_VERSION = "jsa_version"
 const KEY_RESUME = "jsa_resume"
 const KEY_EXPERIENCE = "jsa_experience"
 const KEY_PREPS = "jsa_preps"
+const KEY_REFLECTIONS = "jsa_reflections"
 
 function initStorage(): void {
   try {
@@ -70,6 +71,39 @@ export function savePrep(entry: PrepGuide): void {
   } catch {
     console.error("Failed to save prep guide to localStorage")
   }
+}
+
+export function getReflections(): Reflection[] {
+  try {
+    const raw = localStorage.getItem(KEY_REFLECTIONS)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(isReflection)
+  } catch {
+    return []
+  }
+}
+
+export function saveReflection(entry: Reflection): void {
+  try {
+    const existing = getReflections()
+    localStorage.setItem(KEY_REFLECTIONS, JSON.stringify([entry, ...existing]))
+  } catch {
+    console.error("Failed to save reflection to localStorage")
+  }
+}
+
+function isReflection(value: unknown): value is Reflection {
+  if (typeof value !== "object" || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v["id"] === "string" &&
+    typeof v["company"] === "string" &&
+    typeof v["role"] === "string" &&
+    typeof v["date"] === "string" &&
+    typeof v["createdAt"] === "string"
+  )
 }
 
 function isPrepGuide(value: unknown): value is PrepGuide {

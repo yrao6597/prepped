@@ -4,6 +4,7 @@ import LandingPage from "./components/LandingPage"
 import ResumeModal from "./components/ResumeModal"
 import ExperienceModal from "./components/ExperienceModal"
 import RecruiterPrep from "./components/RecruiterPrep"
+import Reflections from "./components/Reflections"
 
 type Tab = "recruiter-prep" | "reflections"
 type View = "home" | Tab
@@ -29,11 +30,7 @@ export default function App() {
       <main>
         {view === "home" && <LandingPage onNavigate={handleTabChange} />}
         {view === "recruiter-prep" && <RecruiterPrep />}
-        {view === "reflections" && (
-          <div className="max-w-3xl mx-auto py-8 px-4 text-gray-400 text-sm">
-            Interview Reflections — coming soon
-          </div>
-        )}
+        {view === "reflections" && <Reflections />}
       </main>
       <ResumeModal
         isOpen={isResumeModalOpen}
