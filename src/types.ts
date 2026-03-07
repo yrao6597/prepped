@@ -31,6 +31,16 @@ export interface Reflection {
   createdAt: string
 }
 
+export type NoteSource = "manual" | "action-plan"
+
+export interface Note {
+  id: string
+  title: string
+  content: string
+  source: NoteSource
+  createdAt: string
+}
+
 export type AsyncState<T> =
   | { status: "idle" }
   | { status: "loading" }

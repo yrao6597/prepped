@@ -1,4 +1,4 @@
-type Tab = "recruiter-prep" | "reflections"
+type Tab = "recruiter-prep" | "reflections" | "notes"
 
 interface NavbarProps {
   activeTab: Tab | null
@@ -28,6 +28,11 @@ export default function Navbar({ activeTab, onTabChange, onHome, onOpenResume, o
             label="Interview Reflections"
             isActive={activeTab === "reflections"}
             onClick={() => onTabChange("reflections")}
+          />
+          <TabButton
+            label="Notes"
+            isActive={activeTab === "notes"}
+            onClick={() => onTabChange("notes")}
           />
         </div>
       </div>

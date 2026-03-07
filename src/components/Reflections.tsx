@@ -1,6 +1,6 @@
 import { useState } from "react"
 import ReactMarkdown from "react-markdown"
-import { getReflections, saveReflection, updateReflection } from "../lib/storage"
+import { getReflections, saveReflection, updateReflection, saveNote } from "../lib/storage"
 import { generateActionPlan } from "../lib/claude"
 import type { Reflection, InterviewOutcome, AsyncState } from "../types"
 
@@ -322,12 +322,29 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
                   prose-li:text-gray-700 prose-p:text-gray-700">
                   <ReactMarkdown>{planState.data}</ReactMarkdown>
                 </div>
-                <button
-                  onClick={handleGeneratePlan}
-                  className="mt-2 text-xs text-gray-400 hover:text-gray-600 underline"
-                >
-                  Regenerate
-                </button>
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    onClick={handleGeneratePlan}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline"
+                  >
+                    Regenerate
+                  </button>
+                  <button
+                    onClick={() => {
+                      saveNote({
+                        id: crypto.randomUUID(),
+                        title: `${r.company} — ${r.role} Action Plan`,
+                        content: planState.data,
+                        source: "action-plan",
+                        createdAt: new Date().toISOString(),
+                      })
+                    }}
+                    className="text-xs text-gray-500 hover:text-gray-800 border border-gray-300
+                      hover:border-gray-400 rounded px-2 py-0.5 transition-colors"
+                  >
+                    Save to Notes
+                  </button>
+                </div>
               </div>
             )}
           </div>

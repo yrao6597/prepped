@@ -1,4 +1,4 @@
-import type { PrepGuide, Reflection } from "../types"
+import type { PrepGuide, Reflection, Note } from "../types"
 
 const STORAGE_VERSION = "1"
 const KEY_VERSION = "jsa_version"
@@ -6,6 +6,7 @@ const KEY_RESUME = "jsa_resume"
 const KEY_EXPERIENCE = "jsa_experience"
 const KEY_PREPS = "jsa_preps"
 const KEY_REFLECTIONS = "jsa_reflections"
+const KEY_NOTES = "jsa_notes"
 
 function initStorage(): void {
   try {
@@ -102,6 +103,47 @@ export function updateReflection(updated: Reflection): void {
   } catch {
     console.error("Failed to update reflection in localStorage")
   }
+}
+
+export function getNotes(): Note[] {
+  try {
+    const raw = localStorage.getItem(KEY_NOTES)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(isNote)
+  } catch {
+    return []
+  }
+}
+
+export function saveNote(entry: Note): void {
+  try {
+    const existing = getNotes()
+    localStorage.setItem(KEY_NOTES, JSON.stringify([entry, ...existing]))
+  } catch {
+    console.error("Failed to save note to localStorage")
+  }
+}
+
+export function deleteNote(id: string): void {
+  try {
+    const existing = getNotes()
+    localStorage.setItem(KEY_NOTES, JSON.stringify(existing.filter((n) => n.id !== id)))
+  } catch {
+    console.error("Failed to delete note from localStorage")
+  }
+}
+
+function isNote(value: unknown): value is Note {
+  if (typeof value !== "object" || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v["id"] === "string" &&
+    typeof v["title"] === "string" &&
+    typeof v["content"] === "string" &&
+    typeof v["createdAt"] === "string"
+  )
 }
 
 function isReflection(value: unknown): value is Reflection {
