@@ -1,6 +1,8 @@
 import { useState } from "react"
-import { getReflections, saveReflection } from "../lib/storage"
-import type { Reflection, InterviewOutcome } from "../types"
+import ReactMarkdown from "react-markdown"
+import { getReflections, saveReflection, updateReflection } from "../lib/storage"
+import { generateActionPlan } from "../lib/claude"
+import type { Reflection, InterviewOutcome, AsyncState } from "../types"
 
 const TODAY = new Date().toISOString().split("T")[0]
 
@@ -13,6 +15,7 @@ const EMPTY_FORM = {
   wentWell: "",
   didntGoWell: "",
   outcome: "pending" as InterviewOutcome,
+  additionalNotes: "",
 }
 
 export default function Reflections() {
@@ -30,6 +33,7 @@ export default function Reflections() {
     const entry: Reflection = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
+      aiActionPlan: "",
       ...form,
     }
     saveReflection(entry)
@@ -166,6 +170,18 @@ export default function Reflections() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+            <textarea
+              value={form.additionalNotes}
+              onChange={(e) => handleFieldChange("additionalNotes", e.target.value)}
+              placeholder="Anything else — gut feelings, things to follow up on, context for next time..."
+              rows={3}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+            />
+          </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
@@ -197,6 +213,10 @@ export default function Reflections() {
             reflection={r}
             isExpanded={expandedId === r.id}
             onToggle={() => setExpandedId(expandedId === r.id ? null : r.id)}
+            onUpdate={(updated) => {
+              updateReflection(updated)
+              setReflections(getReflections())
+            }}
           />
         ))}
       </div>
@@ -208,9 +228,27 @@ interface ReflectionCardProps {
   reflection: Reflection
   isExpanded: boolean
   onToggle: () => void
+  onUpdate: (updated: Reflection) => void
 }
 
-function ReflectionCard({ reflection: r, isExpanded, onToggle }: ReflectionCardProps) {
+function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: ReflectionCardProps) {
+  const [planState, setPlanState] = useState<AsyncState<string>>(
+    r.aiActionPlan ? { status: "success", data: r.aiActionPlan } : { status: "idle" }
+  )
+
+  async function handleGeneratePlan() {
+    setPlanState({ status: "loading" })
+    try {
+      const plan = await generateActionPlan(r)
+      const updated = { ...r, aiActionPlan: plan }
+      onUpdate(updated)
+      setPlanState({ status: "success", data: plan })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong"
+      setPlanState({ status: "error", error: message })
+    }
+  }
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <button
@@ -246,6 +284,53 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle }: ReflectionCardP
             {r.wentWell && <Section label="What went well" content={r.wentWell} />}
             {r.didntGoWell && <Section label="What didn't go well" content={r.didntGoWell} />}
           </div>
+          {r.additionalNotes && (
+            <Section label="Additional Notes" content={r.additionalNotes} />
+          )}
+
+          <div className="border-t border-gray-100 pt-4">
+            {planState.status === "idle" && (
+              <button
+                onClick={handleGeneratePlan}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700
+                  border border-gray-300 rounded hover:border-gray-400 hover:text-gray-900 transition-colors"
+              >
+                ✨ Generate Action Plan
+              </button>
+            )}
+            {planState.status === "loading" && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating action plan...
+              </div>
+            )}
+            {planState.status === "error" && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                {planState.error}
+                <button onClick={handleGeneratePlan} className="ml-2 underline">Retry</button>
+              </div>
+            )}
+            {planState.status === "success" && (
+              <div>
+                <p className="text-sm font-bold text-gray-900 mb-2">✨ AI Action Plan</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-md px-4 py-3
+                  prose prose-sm prose-gray max-w-none
+                  prose-headings:font-semibold prose-headings:text-gray-900
+                  prose-li:text-gray-700 prose-p:text-gray-700">
+                  <ReactMarkdown>{planState.data}</ReactMarkdown>
+                </div>
+                <button
+                  onClick={handleGeneratePlan}
+                  className="mt-2 text-xs text-gray-400 hover:text-gray-600 underline"
+                >
+                  Regenerate
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -255,8 +340,10 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle }: ReflectionCardP
 function Section({ label, content }: { label: string; content: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{content}</p>
+      <p className="text-sm font-bold text-gray-900 mb-2">{label}</p>
+      <div className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+        {content}
+      </div>
     </div>
   )
 }

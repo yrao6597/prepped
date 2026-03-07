@@ -1,4 +1,4 @@
-import type { PrepGuideInput } from "../types"
+import type { PrepGuideInput, Reflection } from "../types"
 
 const API_URL = "https://api.anthropic.com/v1/messages"
 const MODEL = "claude-sonnet-4-20250514"
@@ -78,4 +78,28 @@ JD: ${input.jobDescription}
 My Background: ${input.resume}${experienceSection}`
 
   return callClaude(PREP_GUIDE_SYSTEM_PROMPT, userMessage)
+}
+
+const ACTION_PLAN_SYSTEM_PROMPT = `You are a career coach helping a software engineer improve their interviewing skills.
+Given notes from a recent interview, generate a concrete, personalised action plan for their next interview prep.
+Structure your response as:
+1. Key Takeaways (2-3 bullet points — the most important things to internalise from this interview)
+2. Specific Skills to Work On (for each: what to improve and exactly how — be concrete, not generic)
+3. Questions to Prepare For (any questions from this session they should have better answers for next time — with suggested approach)
+4. Before Your Next Interview (a short checklist of things to do or review)
+Be direct and honest. No sugarcoating.`
+
+export async function generateActionPlan(reflection: Reflection): Promise<string> {
+  const parts = [
+    `Company: ${reflection.company}`,
+    `Role: ${reflection.role}`,
+    `Interview Type: ${reflection.interviewType || "Not specified"}`,
+    `Outcome: ${reflection.outcome}`,
+    reflection.questionsAsked ? `Questions Asked:\n${reflection.questionsAsked}` : "",
+    reflection.wentWell ? `What Went Well:\n${reflection.wentWell}` : "",
+    reflection.didntGoWell ? `What Didn't Go Well:\n${reflection.didntGoWell}` : "",
+    reflection.additionalNotes ? `Additional Notes:\n${reflection.additionalNotes}` : "",
+  ].filter(Boolean)
+
+  return callClaude(ACTION_PLAN_SYSTEM_PROMPT, parts.join("\n\n"))
 }

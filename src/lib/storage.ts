@@ -94,6 +94,16 @@ export function saveReflection(entry: Reflection): void {
   }
 }
 
+export function updateReflection(updated: Reflection): void {
+  try {
+    const existing = getReflections()
+    const next = existing.map((r) => (r.id === updated.id ? updated : r))
+    localStorage.setItem(KEY_REFLECTIONS, JSON.stringify(next))
+  } catch {
+    console.error("Failed to update reflection in localStorage")
+  }
+}
+
 function isReflection(value: unknown): value is Reflection {
   if (typeof value !== "object" || value === null) return false
   const v = value as Record<string, unknown>

@@ -26,6 +26,8 @@ export interface Reflection {
   wentWell: string
   didntGoWell: string
   outcome: InterviewOutcome
+  additionalNotes: string
+  aiActionPlan: string
   createdAt: string
 }
 
