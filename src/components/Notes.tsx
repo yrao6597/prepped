@@ -1,6 +1,6 @@
 import { useState } from "react"
 import ReactMarkdown from "react-markdown"
-import { getNotes, saveNote, deleteNote } from "../lib/storage"
+import { getNotes, saveNote, updateNote, deleteNote } from "../lib/storage"
 import type { Note, NoteSource } from "../types"
 
 const SOURCE_LABELS: Record<NoteSource, string> = {
@@ -28,6 +28,11 @@ export default function Notes() {
     setForm({ title: "", content: "" })
     setIsFormOpen(false)
     setExpandedId(entry.id)
+  }
+
+  function handleUpdate(updated: Note) {
+    updateNote(updated)
+    setNotes(getNotes())
   }
 
   function handleDelete(id: string) {
@@ -108,6 +113,7 @@ export default function Notes() {
             note={note}
             isExpanded={expandedId === note.id}
             onToggle={() => setExpandedId(expandedId === note.id ? null : note.id)}
+            onUpdate={handleUpdate}
             onDelete={() => handleDelete(note.id)}
           />
         ))}
@@ -120,13 +126,33 @@ interface NoteCardProps {
   note: Note
   isExpanded: boolean
   onToggle: () => void
+  onUpdate: (updated: Note) => void
   onDelete: () => void
 }
 
-function NoteCard({ note, isExpanded, onToggle, onDelete }: NoteCardProps) {
+function NoteCard({ note, isExpanded, onToggle, onUpdate, onDelete }: NoteCardProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ title: note.title, content: note.content })
+
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation()
     if (confirm("Delete this note?")) onDelete()
+  }
+
+  function handleEditClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    setEditForm({ title: note.title, content: note.content })
+    setIsEditing(true)
+  }
+
+  function handleEditSave(e: React.FormEvent) {
+    e.preventDefault()
+    onUpdate({ ...note, title: editForm.title, content: editForm.content })
+    setIsEditing(false)
+  }
+
+  function handleEditCancel() {
+    setIsEditing(false)
   }
 
   return (
@@ -144,6 +170,13 @@ function NoteCard({ note, isExpanded, onToggle, onDelete }: NoteCardProps) {
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-xs text-gray-400">{formatDate(note.createdAt)}</span>
           <button
+            onClick={handleEditClick}
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-1"
+            aria-label="Edit note"
+          >
+            Edit
+          </button>
+          <button
             onClick={handleDelete}
             className="text-xs text-gray-400 hover:text-red-500 transition-colors px-1"
             aria-label="Delete note"
@@ -154,7 +187,52 @@ function NoteCard({ note, isExpanded, onToggle, onDelete }: NoteCardProps) {
         </div>
       </button>
 
-      {isExpanded && (
+      {isEditing && (
+        <div className="border-t border-gray-100 px-5 py-4">
+          <form onSubmit={handleEditSave} className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                required
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+              <textarea
+                value={editForm.content}
+                onChange={(e) => setEditForm((p) => ({ ...p, content: e.target.value }))}
+                required
+                rows={8}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleEditCancel}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
+                  border-gray-300 rounded hover:border-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm bg-gray-900 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {isExpanded && !isEditing && (
         <div className="border-t border-gray-100 px-5 py-4">
           <div className="prose prose-sm prose-gray max-w-none
             prose-headings:font-semibold prose-headings:text-gray-900

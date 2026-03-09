@@ -126,6 +126,15 @@ export function saveNote(entry: Note): void {
   }
 }
 
+export function updateNote(updated: Note): void {
+  try {
+    const existing = getNotes()
+    localStorage.setItem(KEY_NOTES, JSON.stringify(existing.map((n) => (n.id === updated.id ? updated : n))))
+  } catch {
+    console.error("Failed to update note in localStorage")
+  }
+}
+
 export function deleteNote(id: string): void {
   try {
     const existing = getNotes()
