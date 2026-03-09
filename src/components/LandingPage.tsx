@@ -37,7 +37,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   return (
     <div className="max-w-3xl mx-auto py-20 px-4">
       <div className="mb-12">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Job Search Assistant</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Prepped</h1>
         <p className="text-gray-500 text-sm">Your personal AI-powered coach for every stage of the interview process.</p>
       </div>
       <div className="grid grid-cols-3 gap-4">

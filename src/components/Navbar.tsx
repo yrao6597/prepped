@@ -16,7 +16,7 @@ export default function Navbar({ activeTab, onTabChange, onHome, onOpenResume, o
           onClick={onHome}
           className="font-semibold text-gray-900 text-sm tracking-tight hover:text-gray-600 transition-colors"
         >
-          Job Search Assistant
+          Prepped
         </button>
         <div className="flex gap-1">
           <TabButton
