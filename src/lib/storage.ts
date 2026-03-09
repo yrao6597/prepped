@@ -74,6 +74,15 @@ export function savePrep(entry: PrepGuide): void {
   }
 }
 
+export function deletePrep(id: string): void {
+  try {
+    const existing = getPreps()
+    localStorage.setItem(KEY_PREPS, JSON.stringify(existing.filter((p) => p.id !== id)))
+  } catch {
+    console.error("Failed to delete prep guide from localStorage")
+  }
+}
+
 export function getReflections(): Reflection[] {
   try {
     const raw = localStorage.getItem(KEY_REFLECTIONS)
