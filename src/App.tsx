@@ -24,6 +24,7 @@ export default function App() {
       <Sidebar
         activeView={view}
         onNavigate={setView}
+        onSelectPrepType={(pt) => { setPrepType(pt); setView("recruiter-prep") }}
         onOpenResume={() => setIsResumeModalOpen(true)}
         onOpenExperience={() => setIsExperienceModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}

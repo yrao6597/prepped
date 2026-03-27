@@ -6,7 +6,7 @@ import { printToPdf } from "../lib/pdf"
 import type { AsyncState, PrepGuide, PrepType } from "../types"
 
 const PREP_TYPE_LABELS: Record<PrepType, string> = {
-  "recruiter-call": "Recruiter Call",
+  "recruiter-call": "Recruiter / HR Call",
   "technical": "Technical Interview",
   "behavioral": "Behavioral Interview",
 }

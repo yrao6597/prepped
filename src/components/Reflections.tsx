@@ -6,6 +6,12 @@ import type { Reflection, InterviewOutcome, AsyncState } from "../types"
 
 const TODAY = new Date().toISOString().split("T")[0]
 
+const INTERVIEW_TYPES = [
+  "Recruiter / HR Call",
+  "Technical Interview",
+  "Behavioral Interview",
+]
+
 const EMPTY_FORM = {
   company: "",
   role: "",
@@ -22,6 +28,7 @@ export default function Reflections() {
   const [reflections, setReflections] = useState<Reflection[]>(() => getReflections())
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM })
+  const [rating, setRating] = useState<number>(0)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   function handleFieldChange(field: keyof typeof form, value: string) {
@@ -34,17 +41,20 @@ export default function Reflections() {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       aiActionPlan: "",
+      rating: rating > 0 ? rating : undefined,
       ...form,
     }
     saveReflection(entry)
     setReflections(getReflections())
     setForm({ ...EMPTY_FORM })
+    setRating(0)
     setIsFormOpen(false)
     setExpandedId(entry.id)
   }
 
   function handleCancel() {
     setForm({ ...EMPTY_FORM })
+    setRating(0)
     setIsFormOpen(false)
   }
 
@@ -121,16 +131,25 @@ export default function Reflections() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type of Interview</label>
-            <input
-              type="text"
-              value={form.interviewType}
-              onChange={(e) => handleFieldChange("interviewType", e.target.value)}
-              placeholder="e.g. Recruiter screen, System design, Behavioural, Take-home..."
-              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-gray-300"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type of Interview</label>
+              <select
+                value={form.interviewType}
+                onChange={(e) => handleFieldChange("interviewType", e.target.value)}
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white"
+              >
+                <option value="">Select type...</option>
+                {INTERVIEW_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">How did it go?</label>
+              <StarRating value={rating} onChange={setRating} />
+            </div>
           </div>
 
           <div>
@@ -224,6 +243,36 @@ export default function Reflections() {
   )
 }
 
+interface StarRatingProps {
+  value: number
+  onChange: (v: number) => void
+}
+
+function StarRating({ value, onChange }: StarRatingProps) {
+  const [hovered, setHovered] = useState(0)
+  return (
+    <div className="flex items-center gap-1 h-[38px]">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star === value ? 0 : star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          className="text-xl leading-none transition-transform duration-100 hover:scale-110"
+        >
+          <span className={(hovered || value) >= star ? "text-amber-400" : "text-gray-200"}>
+            ★
+          </span>
+        </button>
+      ))}
+      {value > 0 && (
+        <span className="text-xs text-gray-400 ml-1">{value}/5</span>
+      )}
+    </div>
+  )
+}
+
 interface ReflectionCardProps {
   reflection: Reflection
   isExpanded: boolean
@@ -255,20 +304,23 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
         onClick={onToggle}
         className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150"
       >
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="font-medium text-gray-900 text-sm">{r.company}</span>
-            <span className="text-gray-400 text-sm mx-1.5">·</span>
-            <span className="text-gray-600 text-sm">{r.role}</span>
-            {r.interviewType && (
-              <>
-                <span className="text-gray-400 text-sm mx-1.5">·</span>
-                <span className="text-gray-500 text-sm">{r.interviewType}</span>
-              </>
-            )}
-          </div>
+        <div>
+          <span className="font-medium text-gray-900 text-sm">{r.company}</span>
+          <span className="text-gray-300 text-sm mx-1.5">·</span>
+          <span className="text-gray-500 text-sm">{r.role}</span>
+          {r.interviewType && (
+            <>
+              <span className="text-gray-300 text-sm mx-1.5">·</span>
+              <span className="text-gray-500 text-sm">{r.interviewType}</span>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {r.rating !== undefined && r.rating > 0 && (
+            <span className="text-xs text-amber-400 tracking-tight">
+              {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+            </span>
+          )}
           <span className="text-xs text-gray-400">{formatDate(r.date)}</span>
           <OutcomeBadge outcome={r.outcome} />
           <svg
@@ -298,9 +350,9 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
               <button
                 onClick={handleGeneratePlan}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700
-                  border border-gray-300 rounded hover:border-gray-400 hover:text-gray-900 transition-colors"
+                  border border-gray-200 rounded-md hover:border-gray-400 hover:text-gray-900 transition-all duration-150"
               >
-                ✨ Generate Action Plan
+                Generate Action Plan
               </button>
             )}
             {planState.status === "loading" && (
@@ -313,14 +365,14 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
               </div>
             )}
             {planState.status === "error" && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
                 {planState.error}
                 <button onClick={handleGeneratePlan} className="ml-2 underline">Retry</button>
               </div>
             )}
             {planState.status === "success" && (
               <div>
-                <p className="text-sm font-bold text-gray-900 mb-2">✨ AI Action Plan</p>
+                <p className="text-sm font-bold text-gray-900 mb-2">AI Action Plan</p>
                 <div className="bg-gray-50 border border-gray-200 rounded-md px-4 py-3
                   prose prose-sm prose-gray max-w-none
                   prose-headings:font-semibold prose-headings:text-gray-900
@@ -344,7 +396,7 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
                         createdAt: new Date().toISOString(),
                       })
                     }}
-                    className="text-xs text-gray-500 hover:text-gray-800 border border-gray-300
+                    className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200
                       hover:border-gray-400 rounded px-2 py-0.5 transition-colors"
                   >
                     Save to Notes

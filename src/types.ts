@@ -30,6 +30,7 @@ export interface Reflection {
   wentWell: string
   didntGoWell: string
   outcome: InterviewOutcome
+  rating?: number
   additionalNotes: string
   aiActionPlan: string
   createdAt: string

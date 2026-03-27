@@ -9,9 +9,9 @@ interface DashboardProps {
 
 function getGreeting(): string {
   const hour = new Date().getHours()
-  if (hour < 12) return "Good morning 👋"
-  if (hour < 17) return "Good afternoon 👋"
-  return "Good evening 👋"
+  if (hour < 12) return "Good morning"
+  if (hour < 17) return "Good afternoon"
+  return "Good evening"
 }
 
 const SUBTITLES = [
@@ -120,7 +120,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(160 35% 38%))" }}
       >
         <div className="flex items-start gap-3">
-          <span className="text-xl">✨</span>
           <div>
             <p className="font-semibold text-primary-foreground mb-1">You're doing great.</p>
             <p className="text-sm leading-relaxed" style={{ color: "hsl(var(--primary-foreground) / 0.85)" }}>

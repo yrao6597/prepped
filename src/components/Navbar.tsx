@@ -14,7 +14,7 @@ interface NavbarProps {
 }
 
 const PREP_TYPE_OPTIONS: Array<{ prepType: PrepType; label: string }> = [
-  { prepType: "recruiter-call", label: "Recruiter Call" },
+  { prepType: "recruiter-call", label: "Recruiter / HR Call" },
   { prepType: "technical", label: "Technical Interview" },
   { prepType: "behavioral", label: "Behavioral Interview" },
 ]

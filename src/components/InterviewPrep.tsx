@@ -11,15 +11,13 @@ const PREP_TYPES: Array<{
   prepType: PrepType
   title: string
   description: string
-  icon: string
 }> = [
   {
     view: "recruiter-prep",
     prepType: "recruiter-call",
-    title: "Recruiter Call",
+    title: "Recruiter / HR Call",
     description:
       "Prepare for a recruiter screen — get a company snapshot, fit analysis, questions to ask, and likely screener questions.",
-    icon: "📋",
   },
   {
     view: "recruiter-prep",
@@ -27,7 +25,6 @@ const PREP_TYPES: Array<{
     title: "Technical Interview",
     description:
       "Prepare for a technical round — coding, system design, or domain-specific questions tailored to the role and your background.",
-    icon: "💻",
   },
   {
     view: "recruiter-prep",
@@ -35,7 +32,6 @@ const PREP_TYPES: Array<{
     title: "Behavioral Interview",
     description:
       "Prepare for behavioral questions — craft strong STAR answers drawn from your specific experience and the job requirements.",
-    icon: "🧠",
   },
 ]
 
@@ -55,7 +51,6 @@ export default function InterviewPrep({ onNavigate }: InterviewPrepProps) {
               hover:border-gray-300 hover:shadow-md hover:-translate-y-px
               transition-all duration-200"
           >
-            <span className="text-2xl mb-4 block">{type.icon}</span>
             <h2 className="font-semibold text-gray-900 mb-2">{type.title}</h2>
             <p className="text-sm text-gray-400 leading-relaxed">{type.description}</p>
           </button>
