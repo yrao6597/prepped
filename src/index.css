@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 25% 97%;
+    --foreground: 200 15% 20%;
+    --card: 40 20% 99%;
+    --primary: 160 30% 46%;
+    --primary-foreground: 40 25% 97%;
+    --secondary: 160 18% 92%;
+    --muted: 40 15% 94%;
+    --muted-foreground: 200 8% 50%;
+    --border: 40 15% 90%;
+    --sidebar-background: 200 15% 15%;
+    --sidebar-foreground: 40 15% 90%;
+    --sidebar-primary: 160 30% 50%;
+    --sidebar-accent: 200 12% 22%;
+    --sage: 160 20% 88%;
+    --lavender: 260 30% 90%;
+    --peach: 20 60% 92%;
+    --rose-soft: 350 40% 93%;
+    --success: 152 55% 42%;
+    --warning: 38 80% 55%;
+    --info: 210 60% 55%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'DM Sans', sans-serif;
+  }
+}

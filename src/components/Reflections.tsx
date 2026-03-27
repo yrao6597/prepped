@@ -51,12 +51,12 @@ export default function Reflections() {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Interview Reflections</h1>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Interview Reflections</h1>
         {!isFormOpen && (
           <button
             onClick={() => setIsFormOpen(true)}
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded
-              hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md
+              hover:bg-gray-700 transition-all duration-150"
           >
             + Add Entry
           </button>
@@ -64,7 +64,7 @@ export default function Reflections() {
       </div>
 
       {isFormOpen && (
-        <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-lg p-6 mb-6 space-y-4">
+        <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-xl p-6 mb-6 space-y-5 shadow-sm">
           <h2 className="font-semibold text-gray-900 mb-2">New Interview Log</h2>
 
           <div className="grid grid-cols-2 gap-4">
@@ -76,8 +76,8 @@ export default function Reflections() {
                 onChange={(e) => handleFieldChange("company", e.target.value)}
                 required
                 placeholder="e.g. Stripe"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300"
               />
             </div>
             <div>
@@ -88,8 +88,8 @@ export default function Reflections() {
                 onChange={(e) => handleFieldChange("role", e.target.value)}
                 required
                 placeholder="e.g. Senior Software Engineer"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300"
               />
             </div>
           </div>
@@ -102,8 +102,8 @@ export default function Reflections() {
                 value={form.date}
                 onChange={(e) => handleFieldChange("date", e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300"
               />
             </div>
             <div>
@@ -111,8 +111,8 @@ export default function Reflections() {
               <select
                 value={form.outcome}
                 onChange={(e) => handleFieldChange("outcome", e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400 bg-white"
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white"
               >
                 <option value="pending">Pending / Don't know yet</option>
                 <option value="passed">Passed</option>
@@ -128,8 +128,8 @@ export default function Reflections() {
               value={form.interviewType}
               onChange={(e) => handleFieldChange("interviewType", e.target.value)}
               placeholder="e.g. Recruiter screen, System design, Behavioural, Take-home..."
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-gray-400"
+              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
 
@@ -140,8 +140,8 @@ export default function Reflections() {
               onChange={(e) => handleFieldChange("questionsAsked", e.target.value)}
               placeholder="What questions did they ask? Dump them all here..."
               rows={4}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y"
             />
           </div>
 
@@ -153,8 +153,8 @@ export default function Reflections() {
                 onChange={(e) => handleFieldChange("wentWell", e.target.value)}
                 placeholder="What felt strong? What landed well?"
                 rows={4}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y"
               />
             </div>
             <div>
@@ -164,8 +164,8 @@ export default function Reflections() {
                 onChange={(e) => handleFieldChange("didntGoWell", e.target.value)}
                 placeholder="What felt off? What would you do differently?"
                 rows={4}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y"
               />
             </div>
           </div>
@@ -177,8 +177,8 @@ export default function Reflections() {
               onChange={(e) => handleFieldChange("additionalNotes", e.target.value)}
               placeholder="Anything else — gut feelings, things to follow up on, context for next time..."
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-gray-300 resize-y"
             />
           </div>
 
@@ -187,14 +187,14 @@ export default function Reflections() {
               type="button"
               onClick={handleCancel}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
-                border-gray-300 rounded hover:border-gray-400 transition-colors"
+                border-gray-200 rounded-md hover:border-gray-400 transition-all duration-150"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-gray-900 text-white rounded
-                hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md
+                hover:bg-gray-700 transition-all duration-150"
             >
               Save
             </button>
@@ -250,10 +250,10 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden transition-shadow duration-200 hover:shadow-sm">
       <button
         onClick={onToggle}
-        className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150"
       >
         <div className="flex items-center gap-4">
           <div>
@@ -271,7 +271,12 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-xs text-gray-400">{formatDate(r.date)}</span>
           <OutcomeBadge outcome={r.outcome} />
-          <span className="text-gray-400 text-xs">{isExpanded ? "▲" : "▼"}</span>
+          <svg
+            className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </button>
 

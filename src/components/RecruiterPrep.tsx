@@ -11,6 +11,12 @@ const PREP_TYPE_LABELS: Record<PrepType, string> = {
   "behavioral": "Behavioral Interview",
 }
 
+const PREP_TYPE_BADGE_STYLES: Record<PrepType, string> = {
+  "recruiter-call": "bg-blue-50 text-blue-600",
+  "technical": "bg-violet-50 text-violet-600",
+  "behavioral": "bg-amber-50 text-amber-600",
+}
+
 const EMPTY_STATE_MESSAGES: Record<PrepType, string> = {
   "recruiter-call": "No prep guides yet. Generate one for your next recruiter call.",
   "technical": "No prep guides yet. Generate one for your next technical interview.",
@@ -25,6 +31,8 @@ const EMPTY_FORM = {
   experience: "",
   additionalInfo: "",
 }
+
+const INPUT_CLASS = "w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
 
 interface RecruiterPrepProps {
   prepType: PrepType
@@ -103,12 +111,12 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">{PREP_TYPE_LABELS[prepType]}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{PREP_TYPE_LABELS[prepType]}</h1>
         {!isFormOpen && (
           <button
             onClick={handleOpenForm}
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded
-              hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md
+              hover:bg-gray-700 transition-all duration-150"
           >
             + New Prep
           </button>
@@ -116,7 +124,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
       </div>
 
       {isFormOpen && (
-        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-6 mb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 mb-6 space-y-5 shadow-sm">
           <h2 className="font-semibold text-gray-900">New Prep Guide</h2>
 
           <div className="grid grid-cols-2 gap-4">
@@ -128,8 +136,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
                 onChange={(e) => handleFieldChange("companyName", e.target.value)}
                 placeholder="e.g. Stripe"
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className={INPUT_CLASS}
               />
             </div>
             <div>
@@ -140,8 +147,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
                 onChange={(e) => handleFieldChange("roleTitle", e.target.value)}
                 placeholder="e.g. Senior Software Engineer"
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className={INPUT_CLASS}
               />
             </div>
           </div>
@@ -154,8 +160,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
               placeholder="Paste the full job description here..."
               required
               rows={8}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y font-mono"
+              className={`${INPUT_CLASS} resize-y font-mono`}
             />
           </div>
 
@@ -175,7 +180,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
               )}
             </div>
             {useSavedResume && hasSavedResume ? (
-              <div className="border border-gray-200 rounded px-3 py-2 bg-gray-50 text-sm text-gray-500 italic">
+              <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-400 italic">
                 Using saved resume — edit it via "My Resume" in the top nav.
               </div>
             ) : (
@@ -184,8 +189,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
                 onChange={(e) => handleFieldChange("resume", e.target.value)}
                 placeholder="Paste your resume or a brief background summary..."
                 rows={5}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y font-mono"
+                className={`${INPUT_CLASS} resize-y font-mono`}
               />
             )}
           </div>
@@ -206,7 +210,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
               )}
             </div>
             {useSavedExperience && hasSavedExperience ? (
-              <div className="border border-gray-200 rounded px-3 py-2 bg-gray-50 text-sm text-gray-500 italic">
+              <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-400 italic">
                 Using saved experience — edit it via "My Experience" in the top nav.
               </div>
             ) : (
@@ -215,8 +219,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
                 onChange={(e) => handleFieldChange("experience", e.target.value)}
                 placeholder="Add project details, impact, stack, and anything beyond your resume..."
                 rows={5}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y font-mono"
+                className={`${INPUT_CLASS} resize-y font-mono`}
               />
             )}
           </div>
@@ -229,32 +232,31 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
               onChange={(e) => handleFieldChange("additionalInfo", e.target.value)}
               placeholder="e.g. Recruiter mentioned they'll focus on system design and past leadership experience. 45-minute call with hiring manager."
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+              className={`${INPUT_CLASS} resize-y`}
             />
           </div>
 
           {generateState.status === "error" && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
               {generateState.error}
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={handleCancel}
               disabled={isLoading}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
-                border-gray-300 rounded hover:border-gray-400 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200
+                rounded-md hover:border-gray-400 transition-all duration-150 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded
-                hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md
+                hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -299,6 +301,7 @@ interface PrepGuideCardProps {
 
 function PrepGuideCard({ prep, isExpanded, onToggle, onDelete }: PrepGuideCardProps) {
   const outputRef = useRef<HTMLDivElement>(null)
+  const badgeStyle = PREP_TYPE_BADGE_STYLES[prep.prepType ?? "recruiter-call"]
 
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation()
@@ -312,29 +315,34 @@ function PrepGuideCard({ prep, isExpanded, onToggle, onDelete }: PrepGuideCardPr
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden transition-shadow duration-200 hover:shadow-sm">
       <button
         onClick={onToggle}
-        className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150"
       >
         <div>
           <span className="font-medium text-gray-900 text-sm">{prep.company}</span>
-          <span className="text-gray-400 text-sm mx-1.5">·</span>
-          <span className="text-gray-600 text-sm">{prep.role}</span>
+          <span className="text-gray-300 text-sm mx-1.5">·</span>
+          <span className="text-gray-500 text-sm">{prep.role}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeStyle}`}>
             {PREP_TYPE_LABELS[prep.prepType ?? "recruiter-call"]}
           </span>
           <span className="text-xs text-gray-400">{formatDate(prep.date)}</span>
           <button
             onClick={handleDelete}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors px-1"
+            className="text-xs text-gray-300 hover:text-red-400 transition-colors duration-150 px-1"
             aria-label="Delete prep guide"
           >
             ✕
           </button>
-          <span className="text-gray-400 text-xs">{isExpanded ? "▲" : "▼"}</span>
+          <svg
+            className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </button>
 
@@ -343,8 +351,8 @@ function PrepGuideCard({ prep, isExpanded, onToggle, onDelete }: PrepGuideCardPr
           <div className="flex justify-end mb-4">
             <button
               onClick={handleDownloadPdf}
-              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900
-                border border-gray-300 hover:border-gray-400 rounded px-3 py-1.5 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900
+                border border-gray-200 hover:border-gray-400 rounded-md px-3 py-1.5 transition-all duration-150"
             >
               <DownloadIcon />
               Download PDF

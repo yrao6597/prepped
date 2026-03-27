@@ -36,23 +36,24 @@ const FEATURES: Array<{
 export default function LandingPage({ onNavigate }: LandingPageProps) {
   return (
     <div className="max-w-3xl mx-auto py-20 px-4">
-      <div className="mb-12">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Prepped</h1>
-        <p className="text-gray-500 text-sm">Your personal AI-powered coach for every stage of the interview process.</p>
+      <div className="mb-14">
+        <h1 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Prepped</h1>
+        <p className="text-gray-400 text-sm">Your personal AI-powered coach for every stage of the interview process.</p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         {FEATURES.map((feature) => (
           <button
             key={feature.tab}
             onClick={() => onNavigate(feature.tab)}
-            className="text-left border border-gray-200 rounded-lg p-6 bg-white
-              hover:border-gray-400 hover:shadow-sm transition-all group"
+            className="text-left border border-gray-200 rounded-xl p-6 bg-white
+              hover:border-gray-300 hover:shadow-md hover:-translate-y-px
+              transition-all duration-200 group"
           >
             <span className="text-2xl mb-4 block">{feature.icon}</span>
-            <h2 className="font-semibold text-gray-900 mb-2 group-hover:text-black">
+            <h2 className="font-semibold text-gray-900 mb-2">
               {feature.title}
             </h2>
-            <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
+            <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
           </button>
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { useState } from "react"
-import Navbar from "./components/Navbar"
-import LandingPage from "./components/LandingPage"
+import Sidebar from "./components/Sidebar"
+import Dashboard from "./components/Dashboard"
 import ResumeModal from "./components/ResumeModal"
 import ExperienceModal from "./components/ExperienceModal"
 import ProfileModal from "./components/ProfileModal"
@@ -10,8 +10,7 @@ import Reflections from "./components/Reflections"
 import Notes from "./components/Notes"
 import type { PrepType } from "./types"
 
-type Tab = "interview-prep" | "recruiter-prep" | "reflections" | "notes"
-type View = "home" | Tab
+type View = "home" | "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 
 export default function App() {
   const [view, setView] = useState<View>("home")
@@ -20,47 +19,33 @@ export default function App() {
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
-  function handleTabChange(tab: Tab) {
-    setView(tab)
-  }
-
-  const activeTab: Tab | null =
-    view === "home" ? null
-    : view === "recruiter-prep" ? "interview-prep"
-    : view
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        onSelectPrepType={(pt) => { setPrepType(pt); setView("recruiter-prep") }}
-        onHome={() => setView("home")}
+    <div className="flex min-h-screen bg-background">
+      <Sidebar
+        activeView={view}
+        onNavigate={setView}
         onOpenResume={() => setIsResumeModalOpen(true)}
         onOpenExperience={() => setIsExperienceModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
       />
-      <main>
-        {view === "home" && <LandingPage onNavigate={handleTabChange} />}
-        {view === "interview-prep" && (
-          <InterviewPrep onNavigate={(v, pt) => { setPrepType(pt); setView(v) }} />
-        )}
-        {view === "recruiter-prep" && <RecruiterPrep prepType={prepType} />}
-        {view === "reflections" && <Reflections />}
-        {view === "notes" && <Notes />}
+
+      <main className="ml-64 flex-1 min-h-screen">
+        <div className="max-w-5xl mx-auto px-8 py-8">
+          {view === "home" && (
+            <Dashboard onNavigate={(v) => setView(v)} />
+          )}
+          {view === "interview-prep" && (
+            <InterviewPrep onNavigate={(v, pt) => { setPrepType(pt); setView(v) }} />
+          )}
+          {view === "recruiter-prep" && <RecruiterPrep prepType={prepType} />}
+          {view === "reflections" && <Reflections />}
+          {view === "notes" && <Notes />}
+        </div>
       </main>
-      <ResumeModal
-        isOpen={isResumeModalOpen}
-        onClose={() => setIsResumeModalOpen(false)}
-      />
-      <ExperienceModal
-        isOpen={isExperienceModalOpen}
-        onClose={() => setIsExperienceModalOpen(false)}
-      />
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-      />
+
+      <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} />
+      <ExperienceModal isOpen={isExperienceModalOpen} onClose={() => setIsExperienceModalOpen(false)} />
+      <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
     </div>
   )
 }

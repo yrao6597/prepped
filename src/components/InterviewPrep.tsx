@@ -42,23 +42,22 @@ const PREP_TYPES: Array<{
 export default function InterviewPrep({ onNavigate }: InterviewPrepProps) {
   return (
     <div className="max-w-3xl mx-auto py-16 px-4">
-      <div className="mb-10">
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">Interview Prep</h1>
-        <p className="text-gray-500 text-sm">Choose the type of interview you're preparing for.</p>
+      <div className="mb-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Interview Prep</h1>
+        <p className="text-gray-400 text-sm">Choose the type of interview you're preparing for.</p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         {PREP_TYPES.map((type) => (
           <button
             key={type.prepType}
             onClick={() => onNavigate(type.view, type.prepType)}
-            className="text-left border border-gray-200 rounded-lg p-6 bg-white
-              hover:border-gray-400 hover:shadow-sm transition-all group"
+            className="text-left border border-gray-200 rounded-xl p-6 bg-white
+              hover:border-gray-300 hover:shadow-md hover:-translate-y-px
+              transition-all duration-200"
           >
             <span className="text-2xl mb-4 block">{type.icon}</span>
-            <h2 className="font-semibold text-gray-900 mb-2 group-hover:text-black">
-              {type.title}
-            </h2>
-            <p className="text-sm text-gray-500 leading-relaxed">{type.description}</p>
+            <h2 className="font-semibold text-gray-900 mb-2">{type.title}</h2>
+            <p className="text-sm text-gray-400 leading-relaxed">{type.description}</p>
           </button>
         ))}
       </div>
