@@ -13,6 +13,7 @@ type View = "home" | Tab
 
 export default function App() {
   const [view, setView] = useState<View>("home")
+  const [prepTitle, setPrepTitle] = useState("Recruiter Call")
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false)
 
@@ -36,8 +37,10 @@ export default function App() {
       />
       <main>
         {view === "home" && <LandingPage onNavigate={handleTabChange} />}
-        {view === "interview-prep" && <InterviewPrep onNavigate={(v) => setView(v)} />}
-        {view === "recruiter-prep" && <RecruiterPrep />}
+        {view === "interview-prep" && (
+          <InterviewPrep onNavigate={(v, title) => { setPrepTitle(title); setView(v) }} />
+        )}
+        {view === "recruiter-prep" && <RecruiterPrep title={prepTitle} />}
         {view === "reflections" && <Reflections />}
         {view === "notes" && <Notes />}
       </main>

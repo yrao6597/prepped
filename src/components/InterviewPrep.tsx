@@ -1,7 +1,7 @@
 type InterviewPrepView = "recruiter-prep"
 
 interface InterviewPrepProps {
-  onNavigate: (view: InterviewPrepView) => void
+  onNavigate: (view: InterviewPrepView, title: string) => void
 }
 
 const PREP_TYPES: Array<{
@@ -44,7 +44,7 @@ export default function InterviewPrep({ onNavigate }: InterviewPrepProps) {
         {PREP_TYPES.map((type) => (
           <button
             key={type.title}
-            onClick={() => onNavigate(type.view)}
+            onClick={() => onNavigate(type.view, type.title)}
             className="text-left border border-gray-200 rounded-lg p-6 bg-white
               hover:border-gray-400 hover:shadow-sm transition-all group"
           >

@@ -6,6 +6,7 @@ const MODEL = "claude-sonnet-4-20250514"
 const PREP_GUIDE_SYSTEM_PROMPT = `You are a job search coach helping a software engineer prepare for a recruiter screening call.
 The user will give you: company name, job title, job description, and optionally their background/resume.
 The user may provide a resume AND a separate "My Experience" section with richer detail on specific projects and work. If both are provided, use the experience notes as the primary source of specific talking points and examples — treat the resume as supporting context.
+The user may also provide "Additional Info About This Round" — e.g. tips from the recruiter, what topics to expect, format details. Incorporate this directly into the relevant sections (likely screener questions, red flags, things to prepare).
 Generate a structured prep guide with:
 1. Quick Company Snapshot (2-3 sentences: what they do, stage, known for)
 2. Why This Role Is a Fit (based on their background vs JD — be specific, reference their actual projects/experience where relevant)
@@ -72,10 +73,14 @@ export async function generatePrepGuide(input: PrepGuideInput): Promise<string> 
     ? `\nMy Experience / Projects:\n${input.experience}`
     : ""
 
+  const additionalInfoSection = input.additionalInfo.trim()
+    ? `\nAdditional Info About This Round:\n${input.additionalInfo}`
+    : ""
+
   const userMessage = `Company: ${input.companyName}
 Role: ${input.roleTitle}
 JD: ${input.jobDescription}
-My Background: ${input.resume}${experienceSection}`
+My Background: ${input.resume}${experienceSection}${additionalInfoSection}`
 
   return callClaude(PREP_GUIDE_SYSTEM_PROMPT, userMessage)
 }

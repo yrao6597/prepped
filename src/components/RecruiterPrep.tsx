@@ -11,9 +11,14 @@ const EMPTY_FORM = {
   jobDescription: "",
   resume: "",
   experience: "",
+  additionalInfo: "",
 }
 
-export default function RecruiterPrep() {
+interface RecruiterPrepProps {
+  title: string
+}
+
+export default function RecruiterPrep({ title }: RecruiterPrepProps) {
   const [preps, setPreps] = useState<PrepGuide[]>(() => getPreps())
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -84,7 +89,7 @@ export default function RecruiterPrep() {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Recruiter Prep</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
         {!isFormOpen && (
           <button
             onClick={handleOpenForm}
@@ -200,6 +205,19 @@ export default function RecruiterPrep() {
                   focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y font-mono"
               />
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Additional Info About This Round</label>
+            <p className="text-xs text-gray-400 mb-1.5">Optional — e.g. tips your recruiter shared, topics to expect, interview format details.</p>
+            <textarea
+              value={form.additionalInfo}
+              onChange={(e) => handleFieldChange("additionalInfo", e.target.value)}
+              placeholder="e.g. Recruiter mentioned they'll focus on system design and past leadership experience. 45-minute call with hiring manager."
+              rows={3}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-gray-400 resize-y"
+            />
           </div>
 
           {generateState.status === "error" && (

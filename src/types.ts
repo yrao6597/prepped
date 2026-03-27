@@ -12,6 +12,7 @@ export interface PrepGuideInput {
   jobDescription: string
   resume: string
   experience: string
+  additionalInfo: string
 }
 
 export type InterviewOutcome = "passed" | "failed" | "pending"
