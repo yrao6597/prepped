@@ -3,11 +3,12 @@ import Navbar from "./components/Navbar"
 import LandingPage from "./components/LandingPage"
 import ResumeModal from "./components/ResumeModal"
 import ExperienceModal from "./components/ExperienceModal"
+import InterviewPrep from "./components/InterviewPrep"
 import RecruiterPrep from "./components/RecruiterPrep"
 import Reflections from "./components/Reflections"
 import Notes from "./components/Notes"
 
-type Tab = "recruiter-prep" | "reflections" | "notes"
+type Tab = "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 type View = "home" | Tab
 
 export default function App() {
@@ -19,10 +20,15 @@ export default function App() {
     setView(tab)
   }
 
+  const activeTab: Tab | null =
+    view === "home" ? null
+    : view === "recruiter-prep" ? "interview-prep"
+    : view
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar
-        activeTab={view === "home" ? null : view}
+        activeTab={activeTab}
         onTabChange={handleTabChange}
         onHome={() => setView("home")}
         onOpenResume={() => setIsResumeModalOpen(true)}
@@ -30,6 +36,7 @@ export default function App() {
       />
       <main>
         {view === "home" && <LandingPage onNavigate={handleTabChange} />}
+        {view === "interview-prep" && <InterviewPrep onNavigate={(v) => setView(v)} />}
         {view === "recruiter-prep" && <RecruiterPrep />}
         {view === "reflections" && <Reflections />}
         {view === "notes" && <Notes />}

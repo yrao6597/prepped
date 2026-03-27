@@ -1,4 +1,4 @@
-type Tab = "recruiter-prep" | "reflections" | "notes"
+type Tab = "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 
 interface NavbarProps {
   activeTab: Tab | null
@@ -20,9 +20,9 @@ export default function Navbar({ activeTab, onTabChange, onHome, onOpenResume, o
         </button>
         <div className="flex gap-1">
           <TabButton
-            label="Recruiter Prep"
-            isActive={activeTab === "recruiter-prep"}
-            onClick={() => onTabChange("recruiter-prep")}
+            label="Interview Prep"
+            isActive={activeTab === "interview-prep"}
+            onClick={() => onTabChange("interview-prep")}
           />
           <TabButton
             label="Interview Reflections"

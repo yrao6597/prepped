@@ -1,4 +1,4 @@
-type Tab = "recruiter-prep" | "reflections" | "notes"
+type Tab = "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 
 interface LandingPageProps {
   onNavigate: (tab: Tab) => void
@@ -11,10 +11,10 @@ const FEATURES: Array<{
   icon: string
 }> = [
   {
-    tab: "recruiter-prep",
-    title: "Recruiter Prep",
+    tab: "interview-prep",
+    title: "Interview Prep",
     description:
-      "Paste a job description and get a tailored prep guide — company snapshot, fit analysis, questions to ask, likely screener questions, and red flags.",
+      "Prepare for any interview type — recruiter screens, technical rounds, and more. Get tailored prep guides based on the job and your background.",
     icon: "📋",
   },
   {
