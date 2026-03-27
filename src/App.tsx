@@ -7,13 +7,14 @@ import InterviewPrep from "./components/InterviewPrep"
 import RecruiterPrep from "./components/RecruiterPrep"
 import Reflections from "./components/Reflections"
 import Notes from "./components/Notes"
+import type { PrepType } from "./types"
 
 type Tab = "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 type View = "home" | Tab
 
 export default function App() {
   const [view, setView] = useState<View>("home")
-  const [prepTitle, setPrepTitle] = useState("Recruiter Call")
+  const [prepType, setPrepType] = useState<PrepType>("recruiter-call")
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false)
 
@@ -38,9 +39,9 @@ export default function App() {
       <main>
         {view === "home" && <LandingPage onNavigate={handleTabChange} />}
         {view === "interview-prep" && (
-          <InterviewPrep onNavigate={(v, title) => { setPrepTitle(title); setView(v) }} />
+          <InterviewPrep onNavigate={(v, pt) => { setPrepType(pt); setView(v) }} />
         )}
-        {view === "recruiter-prep" && <RecruiterPrep title={prepTitle} />}
+        {view === "recruiter-prep" && <RecruiterPrep prepType={prepType} />}
         {view === "reflections" && <Reflections />}
         {view === "notes" && <Notes />}
       </main>

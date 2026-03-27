@@ -1,9 +1,12 @@
+export type PrepType = "recruiter-call" | "technical" | "behavioral"
+
 export interface PrepGuide {
   id: string
   date: string
   company: string
   role: string
   output: string
+  prepType?: PrepType
 }
 
 export interface PrepGuideInput {

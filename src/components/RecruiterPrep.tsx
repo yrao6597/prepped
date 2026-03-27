@@ -3,7 +3,19 @@ import ReactMarkdown from "react-markdown"
 import { generatePrepGuide } from "../lib/claude"
 import { getResume, saveResume, getExperience, saveExperience, getPreps, savePrep, deletePrep } from "../lib/storage"
 import { printToPdf } from "../lib/pdf"
-import type { AsyncState, PrepGuide } from "../types"
+import type { AsyncState, PrepGuide, PrepType } from "../types"
+
+const PREP_TYPE_LABELS: Record<PrepType, string> = {
+  "recruiter-call": "Recruiter Call",
+  "technical": "Technical Interview",
+  "behavioral": "Behavioral Interview",
+}
+
+const EMPTY_STATE_MESSAGES: Record<PrepType, string> = {
+  "recruiter-call": "No prep guides yet. Generate one for your next recruiter call.",
+  "technical": "No prep guides yet. Generate one for your next technical interview.",
+  "behavioral": "No prep guides yet. Generate one for your next behavioral interview.",
+}
 
 const EMPTY_FORM = {
   companyName: "",
@@ -15,11 +27,13 @@ const EMPTY_FORM = {
 }
 
 interface RecruiterPrepProps {
-  title: string
+  prepType: PrepType
 }
 
-export default function RecruiterPrep({ title }: RecruiterPrepProps) {
-  const [preps, setPreps] = useState<PrepGuide[]>(() => getPreps())
+export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
+  const [preps, setPreps] = useState<PrepGuide[]>(() =>
+    getPreps().filter((p) => (p.prepType ?? "recruiter-call") === prepType)
+  )
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
@@ -65,10 +79,10 @@ export default function RecruiterPrep({ title }: RecruiterPrepProps) {
         company: form.companyName,
         role: form.roleTitle,
         output,
+        prepType,
       }
       savePrep(entry)
-      const updated = getPreps()
-      setPreps(updated)
+      setPreps(getPreps().filter((p) => (p.prepType ?? "recruiter-call") === prepType))
       setGenerateState({ status: "idle" })
       setIsFormOpen(false)
       setExpandedId(entry.id)
@@ -80,7 +94,7 @@ export default function RecruiterPrep({ title }: RecruiterPrepProps) {
 
   function handleDelete(id: string) {
     deletePrep(id)
-    setPreps(getPreps())
+    setPreps(getPreps().filter((p) => (p.prepType ?? "recruiter-call") === prepType))
     if (expandedId === id) setExpandedId(null)
   }
 
@@ -89,7 +103,7 @@ export default function RecruiterPrep({ title }: RecruiterPrepProps) {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{PREP_TYPE_LABELS[prepType]}</h1>
         {!isFormOpen && (
           <button
             onClick={handleOpenForm}
@@ -256,7 +270,7 @@ export default function RecruiterPrep({ title }: RecruiterPrepProps) {
       )}
 
       {preps.length === 0 && !isFormOpen && (
-        <p className="text-sm text-gray-400">No prep guides yet. Generate one for your next recruiter call.</p>
+        <p className="text-sm text-gray-400">{EMPTY_STATE_MESSAGES[prepType]}</p>
       )}
 
       <div className="space-y-3">
@@ -309,6 +323,9 @@ function PrepGuideCard({ prep, isExpanded, onToggle, onDelete }: PrepGuideCardPr
           <span className="text-gray-600 text-sm">{prep.role}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+            {PREP_TYPE_LABELS[prep.prepType ?? "recruiter-call"]}
+          </span>
           <span className="text-xs text-gray-400">{formatDate(prep.date)}</span>
           <button
             onClick={handleDelete}
