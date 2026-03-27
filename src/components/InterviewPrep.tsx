@@ -17,6 +17,20 @@ const PREP_TYPES: Array<{
       "Prepare for a recruiter screen — get a company snapshot, fit analysis, questions to ask, and likely screener questions.",
     icon: "📋",
   },
+  {
+    view: "recruiter-prep",
+    title: "Technical Interview",
+    description:
+      "Prepare for a technical round — coding, system design, or domain-specific questions tailored to the role and your background.",
+    icon: "💻",
+  },
+  {
+    view: "recruiter-prep",
+    title: "Behavioral Interview",
+    description:
+      "Prepare for behavioral questions — craft strong STAR answers drawn from your specific experience and the job requirements.",
+    icon: "🧠",
+  },
 ]
 
 export default function InterviewPrep({ onNavigate }: InterviewPrepProps) {
@@ -29,7 +43,7 @@ export default function InterviewPrep({ onNavigate }: InterviewPrepProps) {
       <div className="grid grid-cols-3 gap-4">
         {PREP_TYPES.map((type) => (
           <button
-            key={type.view}
+            key={type.title}
             onClick={() => onNavigate(type.view)}
             className="text-left border border-gray-200 rounded-lg p-6 bg-white
               hover:border-gray-400 hover:shadow-sm transition-all group"
