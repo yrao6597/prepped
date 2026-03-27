@@ -45,6 +45,13 @@ export interface Note {
   createdAt: string
 }
 
+export interface UserProfile {
+  email: string
+  linkedin: string
+  github: string
+  website: string
+}
+
 export type AsyncState<T> =
   | { status: "idle" }
   | { status: "loading" }

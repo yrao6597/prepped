@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar"
 import LandingPage from "./components/LandingPage"
 import ResumeModal from "./components/ResumeModal"
 import ExperienceModal from "./components/ExperienceModal"
+import ProfileModal from "./components/ProfileModal"
 import InterviewPrep from "./components/InterviewPrep"
 import RecruiterPrep from "./components/RecruiterPrep"
 import Reflections from "./components/Reflections"
@@ -17,6 +18,7 @@ export default function App() {
   const [prepType, setPrepType] = useState<PrepType>("recruiter-call")
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   function handleTabChange(tab: Tab) {
     setView(tab)
@@ -32,9 +34,11 @@ export default function App() {
       <Navbar
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        onSelectPrepType={(pt) => { setPrepType(pt); setView("recruiter-prep") }}
         onHome={() => setView("home")}
         onOpenResume={() => setIsResumeModalOpen(true)}
         onOpenExperience={() => setIsExperienceModalOpen(true)}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
       />
       <main>
         {view === "home" && <LandingPage onNavigate={handleTabChange} />}
@@ -52,6 +56,10 @@ export default function App() {
       <ExperienceModal
         isOpen={isExperienceModalOpen}
         onClose={() => setIsExperienceModalOpen(false)}
+      />
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </div>
   )

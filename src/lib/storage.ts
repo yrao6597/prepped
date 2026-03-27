@@ -1,4 +1,4 @@
-import type { PrepGuide, Reflection, Note } from "../types"
+import type { PrepGuide, Reflection, Note, UserProfile } from "../types"
 
 const STORAGE_VERSION = "1"
 const KEY_VERSION = "jsa_version"
@@ -7,6 +7,7 @@ const KEY_EXPERIENCE = "jsa_experience"
 const KEY_PREPS = "jsa_preps"
 const KEY_REFLECTIONS = "jsa_reflections"
 const KEY_NOTES = "jsa_notes"
+const KEY_PROFILE = "jsa_profile"
 
 function initStorage(): void {
   try {
@@ -141,6 +142,32 @@ export function updateNote(updated: Note): void {
     localStorage.setItem(KEY_NOTES, JSON.stringify(existing.map((n) => (n.id === updated.id ? updated : n))))
   } catch {
     console.error("Failed to update note in localStorage")
+  }
+}
+
+export function getProfile(): UserProfile {
+  try {
+    const raw = localStorage.getItem(KEY_PROFILE)
+    if (!raw) return { email: "", linkedin: "", github: "", website: "" }
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== "object" || parsed === null) return { email: "", linkedin: "", github: "", website: "" }
+    const p = parsed as Record<string, unknown>
+    return {
+      email: typeof p["email"] === "string" ? p["email"] : "",
+      linkedin: typeof p["linkedin"] === "string" ? p["linkedin"] : "",
+      github: typeof p["github"] === "string" ? p["github"] : "",
+      website: typeof p["website"] === "string" ? p["website"] : "",
+    }
+  } catch {
+    return { email: "", linkedin: "", github: "", website: "" }
+  }
+}
+
+export function saveProfile(profile: UserProfile): void {
+  try {
+    localStorage.setItem(KEY_PROFILE, JSON.stringify(profile))
+  } catch {
+    console.error("Failed to save profile to localStorage")
   }
 }
 
