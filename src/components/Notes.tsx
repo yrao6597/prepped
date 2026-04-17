@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
-import { getNotes, saveNote, updateNote, deleteNote } from "../lib/storage"
+import { getNotes, saveNote, updateNote, deleteNote } from "../lib/api"
 import type { Note, NoteSource } from "../types"
 
 const SOURCE_LABELS: Record<NoteSource, string> = {
@@ -9,12 +9,41 @@ const SOURCE_LABELS: Record<NoteSource, string> = {
 }
 
 export default function Notes() {
-  const [notes, setNotes] = useState<Note[]>(() => getNotes())
+  const [notes, setNotes] = useState<Note[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [form, setForm] = useState({ title: "", content: "" })
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSave(e: React.FormEvent) {
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadNotes() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await getNotes()
+        if (!isCancelled) setNotes(data)
+      } catch (err) {
+        if (!isCancelled) {
+          const message = err instanceof Error ? err.message : "Failed to load notes"
+          setError(message)
+        }
+      } finally {
+        if (!isCancelled) setIsLoading(false)
+      }
+    }
+
+    void loadNotes()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const entry: Note = {
       id: crypto.randomUUID(),
@@ -23,22 +52,43 @@ export default function Notes() {
       source: "manual",
       createdAt: new Date().toISOString(),
     }
-    saveNote(entry)
-    setNotes(getNotes())
-    setForm({ title: "", content: "" })
-    setIsFormOpen(false)
-    setExpandedId(entry.id)
+    setIsSaving(true)
+    setError(null)
+    try {
+      await saveNote(entry)
+      setNotes((prev) => [entry, ...prev])
+      setForm({ title: "", content: "" })
+      setIsFormOpen(false)
+      setExpandedId(entry.id)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save note"
+      setError(message)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  function handleUpdate(updated: Note) {
-    updateNote(updated)
-    setNotes(getNotes())
+  async function handleUpdate(updated: Note) {
+    setError(null)
+    try {
+      await updateNote(updated)
+      setNotes((prev) => prev.map((note) => (note.id === updated.id ? updated : note)))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update note"
+      setError(message)
+    }
   }
 
-  function handleDelete(id: string) {
-    deleteNote(id)
-    setNotes(getNotes())
-    if (expandedId === id) setExpandedId(null)
+  async function handleDelete(id: string) {
+    setError(null)
+    try {
+      await deleteNote(id)
+      setNotes((prev) => prev.filter((note) => note.id !== id))
+      if (expandedId === id) setExpandedId(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete note"
+      setError(message)
+    }
   }
 
   return (
@@ -55,6 +105,12 @@ export default function Notes() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
       {isFormOpen && (
         <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-xl p-6 mb-6 space-y-4 shadow-sm">
@@ -87,22 +143,28 @@ export default function Notes() {
             <button
               type="button"
               onClick={() => { setForm({ title: "", content: "" }); setIsFormOpen(false) }}
+              disabled={isSaving}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
-                border-gray-200 rounded-md hover:border-gray-400 transition-all duration-150"
+                border-gray-200 rounded-md hover:border-gray-400 transition-all duration-150 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-all duration-150"
+              disabled={isSaving}
+              className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-all duration-150 disabled:opacity-50"
             >
-              Save
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
       )}
 
-      {notes.length === 0 && !isFormOpen && (
+      {isLoading && !isFormOpen && (
+        <p className="text-sm text-gray-400">Loading notes...</p>
+      )}
+
+      {!isLoading && notes.length === 0 && !isFormOpen && (
         <p className="text-sm text-gray-400">No notes yet. Add one manually or save an AI action plan from an interview reflection.</p>
       )}
 
