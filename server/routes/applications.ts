@@ -11,6 +11,10 @@ function isApplicationStatus(value: unknown): value is "in-review" | "in-intervi
   return value === "in-review" || value === "in-interview" || value === "not-proceeding"
 }
 
+function isApplicationInterestLevel(value: unknown): value is "top-choice" | "interested" | "exploring" {
+  return value === "top-choice" || value === "interested" || value === "exploring"
+}
+
 applicationsRouter.get("/", (_req, res) => {
   const applications = applicationsController.getApplications()
   res.json(applications)
@@ -24,6 +28,7 @@ applicationsRouter.post("/", (req, res) => {
     role,
     team = "",
     status = "in-review",
+    interestLevel = "interested",
     keyPoints,
     requirements,
     applicationDate,
@@ -37,6 +42,7 @@ applicationsRouter.post("/", (req, res) => {
     typeof role !== "string" ||
     typeof team !== "string" ||
     !isApplicationStatus(status) ||
+    !isApplicationInterestLevel(interestLevel) ||
     !isStringArray(keyPoints) ||
     !isStringArray(requirements) ||
     typeof applicationDate !== "string" ||
@@ -44,7 +50,7 @@ applicationsRouter.post("/", (req, res) => {
   ) {
     res.status(400).json({
       error:
-        "id, url, company, role, team, applicationDate, and createdAt are required strings; status must be valid; keyPoints and requirements must be string arrays",
+        "id, url, company, role, team, applicationDate, and createdAt are required strings; status and interestLevel must be valid; keyPoints and requirements must be string arrays",
     })
     return
   }
@@ -56,6 +62,7 @@ applicationsRouter.post("/", (req, res) => {
     role,
     team,
     status,
+    interestLevel,
     keyPoints,
     requirements,
     applicationDate,
@@ -73,6 +80,18 @@ applicationsRouter.put("/:id/status", (req, res) => {
   }
 
   applicationsController.updateApplicationStatus(req.params.id, status)
+  res.json({ ok: true })
+})
+
+applicationsRouter.put("/:id/interest-level", (req, res) => {
+  const { interestLevel } = req.body as Record<string, unknown>
+
+  if (!isApplicationInterestLevel(interestLevel)) {
+    res.status(400).json({ error: "interestLevel must be 'top-choice', 'interested', or 'exploring'" })
+    return
+  }
+
+  applicationsController.updateApplicationInterestLevel(req.params.id, interestLevel)
   res.json({ ok: true })
 })
 

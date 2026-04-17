@@ -19,3 +19,10 @@ export function updateApplicationStatus(
 ): void {
   applicationsService.updateApplicationStatus(id, status)
 }
+
+export function updateApplicationInterestLevel(
+  id: string,
+  interestLevel: Application["interestLevel"]
+): void {
+  applicationsService.updateApplicationInterestLevel(id, interestLevel)
+}

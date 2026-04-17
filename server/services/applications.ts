@@ -7,6 +7,7 @@ export interface Application {
   role: string
   team: string
   status: "in-review" | "in-interview" | "not-proceeding"
+  interestLevel: "top-choice" | "interested" | "exploring"
   keyPoints: string[]
   requirements: string[]
   applicationDate: string
@@ -20,6 +21,7 @@ type ApplicationRow = {
   role: string
   team: string
   status: string
+  interest_level: string
   key_points: string
   requirements: string
   application_date: string
@@ -43,6 +45,7 @@ function rowToApplication(row: ApplicationRow): Application {
     role: row.role,
     team: row.team,
     status: row.status as Application["status"],
+    interestLevel: row.interest_level as Application["interestLevel"],
     keyPoints: parseStringArray(row.key_points),
     requirements: parseStringArray(row.requirements),
     applicationDate: row.application_date,
@@ -58,8 +61,8 @@ export function getApplications(): Application[] {
 export function createApplication(application: Application): void {
   db.prepare(
     `INSERT INTO applications (
-      id, url, company, role, team, status, key_points, requirements, application_date, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      id, url, company, role, team, status, interest_level, key_points, requirements, application_date, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     application.id,
     application.url,
@@ -67,6 +70,7 @@ export function createApplication(application: Application): void {
     application.role,
     application.team,
     application.status,
+    application.interestLevel,
     JSON.stringify(application.keyPoints),
     JSON.stringify(application.requirements),
     application.applicationDate,
@@ -76,6 +80,13 @@ export function createApplication(application: Application): void {
 
 export function updateApplicationStatus(id: string, status: Application["status"]): void {
   db.prepare("UPDATE applications SET status = ? WHERE id = ?").run(status, id)
+}
+
+export function updateApplicationInterestLevel(
+  id: string,
+  interestLevel: Application["interestLevel"]
+): void {
+  db.prepare("UPDATE applications SET interest_level = ? WHERE id = ?").run(interestLevel, id)
 }
 
 export function deleteApplication(id: string): void {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { getApplications, updateApplicationStatus } from "../lib/api"
-import type { Application, ApplicationStatus } from "../lib/api"
+import { getApplications, updateApplicationInterestLevel, updateApplicationStatus } from "../lib/api"
+import type { Application, ApplicationInterestLevel, ApplicationStatus } from "../lib/api"
 
 type SortOrder = "newest" | "oldest"
 type ViewMode = "board" | "list"
@@ -22,6 +22,12 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
   "not-proceeding": "Not proceeding",
 }
 
+const INTEREST_LEVEL_OPTIONS: Array<{ value: ApplicationInterestLevel; label: string }> = [
+  { value: "top-choice", label: "Top choice" },
+  { value: "interested", label: "Interested" },
+  { value: "exploring", label: "Exploring" },
+]
+
 export default function Applications() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [applications, setApplications] = useState<Application[]>([])
@@ -30,6 +36,7 @@ export default function Applications() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest")
   const [statusUpdateId, setStatusUpdateId] = useState<string | null>(null)
+  const [interestUpdateId, setInterestUpdateId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("board")
 
   useEffect(() => {
@@ -84,6 +91,24 @@ export default function Applications() {
       setError(message)
     } finally {
       setStatusUpdateId(null)
+    }
+  }
+
+  async function handleInterestLevelChange(id: string, interestLevel: ApplicationInterestLevel) {
+    setInterestUpdateId(id)
+    setError(null)
+    try {
+      await updateApplicationInterestLevel(id, interestLevel)
+      setApplications((prev) =>
+        prev.map((application) =>
+          application.id === id ? { ...application, interestLevel } : application
+        )
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update interest level"
+      setError(message)
+    } finally {
+      setInterestUpdateId(null)
     }
   }
 
@@ -253,8 +278,10 @@ export default function Applications() {
                       application={application}
                       isExpanded={expandedId === application.id}
                       isUpdatingStatus={statusUpdateId === application.id}
+                      isUpdatingInterest={interestUpdateId === application.id}
                       onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
                       onStatusChange={handleStatusChange}
+                      onInterestLevelChange={handleInterestLevelChange}
                     />
                   ))}
                 </div>
@@ -270,8 +297,10 @@ export default function Applications() {
               application={application}
               isExpanded={expandedId === application.id}
               isUpdatingStatus={statusUpdateId === application.id}
+              isUpdatingInterest={interestUpdateId === application.id}
               onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
               onStatusChange={handleStatusChange}
+              onInterestLevelChange={handleInterestLevelChange}
             />
           ))}
         </div>
@@ -284,14 +313,18 @@ function ApplicationCard({
   application,
   isExpanded,
   isUpdatingStatus,
+  isUpdatingInterest,
   onToggle,
   onStatusChange,
+  onInterestLevelChange,
 }: {
   application: Application
   isExpanded: boolean
   isUpdatingStatus: boolean
+  isUpdatingInterest: boolean
   onToggle: () => void
   onStatusChange: (id: string, status: ApplicationStatus) => void
+  onInterestLevelChange: (id: string, interestLevel: ApplicationInterestLevel) => void
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">
@@ -345,23 +378,44 @@ function ApplicationCard({
         </button>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
-        <label htmlFor={`status-${application.id}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-          Status
-        </label>
-        <select
-          id={`status-${application.id}`}
-          value={application.status}
-          onChange={(e) => onStatusChange(application.id, e.target.value as ApplicationStatus)}
-          disabled={isUpdatingStatus}
-          className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
-        >
-          {STATUS_COLUMNS.map((status) => (
-            <option key={status.key} value={status.key}>
-              {status.label}
-            </option>
-          ))}
-        </select>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label htmlFor={`status-${application.id}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+            Status
+          </label>
+          <select
+            id={`status-${application.id}`}
+            value={application.status}
+            onChange={(e) => onStatusChange(application.id, e.target.value as ApplicationStatus)}
+            disabled={isUpdatingStatus}
+            className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+          >
+            {STATUS_COLUMNS.map((status) => (
+              <option key={status.key} value={status.key}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor={`interest-${application.id}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+            Interest
+          </label>
+          <select
+            id={`interest-${application.id}`}
+            value={application.interestLevel}
+            onChange={(e) => onInterestLevelChange(application.id, e.target.value as ApplicationInterestLevel)}
+            disabled={isUpdatingInterest}
+            className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+          >
+            {INTEREST_LEVEL_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {isExpanded && (application.keyPoints.length > 0 || application.requirements.length > 0) && (

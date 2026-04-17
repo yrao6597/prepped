@@ -9,6 +9,7 @@ import type {
 const API_BASE_URL = "http://localhost:3001/api"
 
 export type ApplicationStatus = "in-review" | "in-interview" | "not-proceeding"
+export type ApplicationInterestLevel = "top-choice" | "interested" | "exploring"
 
 export interface Application {
   id: string
@@ -17,6 +18,7 @@ export interface Application {
   role: string
   team: string
   status: ApplicationStatus
+  interestLevel: ApplicationInterestLevel
   keyPoints: string[]
   requirements: string[]
   applicationDate: string
@@ -188,6 +190,13 @@ export function saveApplication(application: Application): Promise<{ ok: true }>
 
 export function updateApplicationStatus(id: string, status: ApplicationStatus): Promise<{ ok: true }> {
   return put(`/applications/${id}/status`, { status })
+}
+
+export function updateApplicationInterestLevel(
+  id: string,
+  interestLevel: ApplicationInterestLevel
+): Promise<{ ok: true }> {
+  return put(`/applications/${id}/interest-level`, { interestLevel })
 }
 
 export function deleteApplication(id: string): Promise<{ ok: true }> {
