@@ -1,7 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
-import { getReflections, saveReflection, updateReflection, saveNote } from "../lib/storage"
-import { generateActionPlan } from "../lib/claude"
+import { generateActionPlan, getReflections, saveNote, saveReflection, updateReflection } from "../lib/api"
 import type { Reflection, InterviewOutcome, AsyncState } from "../types"
 
 const TODAY = new Date().toISOString().split("T")[0]
@@ -25,17 +24,46 @@ const EMPTY_FORM = {
 }
 
 export default function Reflections() {
-  const [reflections, setReflections] = useState<Reflection[]>(() => getReflections())
+  const [reflections, setReflections] = useState<Reflection[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [rating, setRating] = useState<number>(0)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadReflections() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await getReflections()
+        if (!isCancelled) setReflections(data)
+      } catch (err) {
+        if (!isCancelled) {
+          const message = err instanceof Error ? err.message : "Failed to load reflections"
+          setError(message)
+        }
+      } finally {
+        if (!isCancelled) setIsLoading(false)
+      }
+    }
+
+    void loadReflections()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
 
   function handleFieldChange(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const entry: Reflection = {
       id: crypto.randomUUID(),
@@ -44,12 +72,21 @@ export default function Reflections() {
       rating: rating > 0 ? rating : undefined,
       ...form,
     }
-    saveReflection(entry)
-    setReflections(getReflections())
-    setForm({ ...EMPTY_FORM })
-    setRating(0)
-    setIsFormOpen(false)
-    setExpandedId(entry.id)
+    setIsSaving(true)
+    setError(null)
+    try {
+      await saveReflection(entry)
+      setReflections((prev) => [entry, ...prev])
+      setForm({ ...EMPTY_FORM })
+      setRating(0)
+      setIsFormOpen(false)
+      setExpandedId(entry.id)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save reflection"
+      setError(message)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   function handleCancel() {
@@ -72,6 +109,12 @@ export default function Reflections() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
       {isFormOpen && (
         <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-xl p-6 mb-6 space-y-5 shadow-sm">
@@ -205,23 +248,29 @@ export default function Reflections() {
             <button
               type="button"
               onClick={handleCancel}
+              disabled={isSaving}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
-                border-gray-200 rounded-md hover:border-gray-400 transition-all duration-150"
+                border-gray-200 rounded-md hover:border-gray-400 transition-all duration-150 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
+              disabled={isSaving}
               className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md
-                hover:bg-gray-700 transition-all duration-150"
+                hover:bg-gray-700 transition-all duration-150 disabled:opacity-50"
             >
-              Save
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
       )}
 
-      {reflections.length === 0 && !isFormOpen && (
+      {isLoading && !isFormOpen && (
+        <p className="text-sm text-gray-400">Loading reflections...</p>
+      )}
+
+      {!isLoading && reflections.length === 0 && !isFormOpen && (
         <p className="text-sm text-gray-400">No reflections yet. Add your first entry after an interview.</p>
       )}
 
@@ -232,9 +281,16 @@ export default function Reflections() {
             reflection={r}
             isExpanded={expandedId === r.id}
             onToggle={() => setExpandedId(expandedId === r.id ? null : r.id)}
-            onUpdate={(updated) => {
-              updateReflection(updated)
-              setReflections(getReflections())
+            onUpdate={async (updated) => {
+              setError(null)
+              try {
+                await updateReflection(updated)
+                setReflections((prev) => prev.map((reflection) => (reflection.id === updated.id ? updated : reflection)))
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to update reflection"
+                setError(message)
+                throw err
+              }
             }}
           />
         ))}
@@ -277,7 +333,7 @@ interface ReflectionCardProps {
   reflection: Reflection
   isExpanded: boolean
   onToggle: () => void
-  onUpdate: (updated: Reflection) => void
+  onUpdate: (updated: Reflection) => Promise<void>
 }
 
 function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: ReflectionCardProps) {
@@ -290,7 +346,7 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
     try {
       const plan = await generateActionPlan(r)
       const updated = { ...r, aiActionPlan: plan }
-      onUpdate(updated)
+      await onUpdate(updated)
       setPlanState({ status: "success", data: plan })
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong"
@@ -387,8 +443,8 @@ function ReflectionCard({ reflection: r, isExpanded, onToggle, onUpdate }: Refle
                     Regenerate
                   </button>
                   <button
-                    onClick={() => {
-                      saveNote({
+                    onClick={async () => {
+                      await saveNote({
                         id: crypto.randomUUID(),
                         title: `${r.company} — ${r.role} Action Plan`,
                         content: planState.data,
