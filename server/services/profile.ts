@@ -10,7 +10,7 @@ export interface Profile {
 }
 
 export function getProfile(): Profile {
-  return db.prepare("SELECT resume, experience, email, linkedin, github, website FROM profile WHERE id = 1").get() as Profile
+  return db.prepare("SELECT resume, experience, email, linkedin, github, website FROM profile WHERE id = 1").get() as unknown as Profile
 }
 
 export function updateResume(resume: string): void {
