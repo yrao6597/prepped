@@ -8,12 +8,15 @@ import type {
 
 const API_BASE_URL = "http://localhost:3001/api"
 
+export type ApplicationStatus = "in-review" | "in-interview" | "not-proceeding"
+
 export interface Application {
   id: string
   url: string
   company: string
   role: string
   team: string
+  status: ApplicationStatus
   keyPoints: string[]
   requirements: string[]
   applicationDate: string
@@ -181,6 +184,10 @@ export function getApplications(): Promise<Application[]> {
 
 export function saveApplication(application: Application): Promise<{ ok: true }> {
   return post("/applications", application)
+}
+
+export function updateApplicationStatus(id: string, status: ApplicationStatus): Promise<{ ok: true }> {
+  return put(`/applications/${id}/status`, { status })
 }
 
 export function deleteApplication(id: string): Promise<{ ok: true }> {

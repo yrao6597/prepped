@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { getPreps, getReflections, getNotes } from "../lib/storage"
+import { getApplications, getNotes, getReflections } from "../lib/api"
+import { getPreps } from "../lib/storage"
 
 type View = "interview-prep" | "reflections" | "notes"
 
@@ -30,14 +32,43 @@ const fadeUp = (delay: number) => ({
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const prepCount = getPreps().length
-  const reflectionCount = getReflections().length
-  const noteCount = getNotes().length
+  const [reflectionCount, setReflectionCount] = useState(0)
+  const [noteCount, setNoteCount] = useState(0)
+  const [applicationCount, setApplicationCount] = useState(0)
+
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadCounts() {
+      try {
+        const [reflections, notes, applications] = await Promise.all([
+          getReflections(),
+          getNotes(),
+          getApplications(),
+        ])
+
+        if (!isCancelled) {
+          setReflectionCount(reflections.length)
+          setNoteCount(notes.length)
+          setApplicationCount(applications.length)
+        }
+      } catch {
+        // Leave existing counts in place if the backend is unavailable.
+      }
+    }
+
+    void loadCounts()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
 
   const stats = [
     { label: "Prep Guides", value: prepCount, icon: PrepIcon },
     { label: "Reflections", value: reflectionCount, icon: ReflectIcon },
     { label: "Notes", value: noteCount, icon: NoteIcon },
-    { label: "Applications", value: 0, icon: AppIcon },
+    { label: "Applications", value: applicationCount, icon: AppIcon },
   ]
 
   const quickActions = [

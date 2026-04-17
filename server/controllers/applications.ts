@@ -12,3 +12,10 @@ export function createApplication(application: Application): void {
 export function deleteApplication(id: string): void {
   applicationsService.deleteApplication(id)
 }
+
+export function updateApplicationStatus(
+  id: string,
+  status: Application["status"]
+): void {
+  applicationsService.updateApplicationStatus(id, status)
+}

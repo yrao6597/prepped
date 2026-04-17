@@ -59,9 +59,17 @@ db.exec(`
     company          TEXT NOT NULL,
     role             TEXT NOT NULL,
     team             TEXT NOT NULL DEFAULT '',
+    status           TEXT NOT NULL DEFAULT 'in-review',
     key_points       TEXT NOT NULL DEFAULT '[]',
     requirements     TEXT NOT NULL DEFAULT '[]',
     application_date TEXT NOT NULL,
     created_at       TEXT NOT NULL
   );
 `)
+
+const applicationColumns = db.prepare("PRAGMA table_info(applications)").all() as Array<{ name: string }>
+const hasStatusColumn = applicationColumns.some((column) => column.name === "status")
+
+if (!hasStatusColumn) {
+  db.exec("ALTER TABLE applications ADD COLUMN status TEXT NOT NULL DEFAULT 'in-review';")
+}

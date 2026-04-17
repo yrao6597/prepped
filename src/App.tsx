@@ -32,7 +32,7 @@ export default function App() {
       />
 
       <main className="ml-64 flex-1 min-h-screen">
-        <div className="max-w-5xl mx-auto px-8 py-8">
+        <div className={`${view === "applications" ? "max-w-[1600px]" : "max-w-5xl"} mx-auto px-8 py-8`}>
           {view === "home" && (
             <Dashboard onNavigate={(v) => setView(v)} />
           )}
