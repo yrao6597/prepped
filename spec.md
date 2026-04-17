@@ -40,13 +40,28 @@ A single-page web app (React + TypeScript + Tailwind) that acts as a personal AI
     .env                 (ANTHROPIC_API_KEY here — never in frontend)
     index.ts             (Express entry point, listens on :3001)
     db.ts                (SQLite setup and schema)
+    lib/
+      anthropic.ts       (single Anthropic client instance, imported by services)
+    services/
+      extraction.ts      (fetch URL → parse HTML with cheerio → call Claude → returns structured JSON; no DB, no imports from other services)
+      claude.ts          (generatePrepGuide, generateActionPlan, extractJobInsights — all Claude calls; no DB, no imports from other services)
+      applications.ts    (DB CRUD for applications only; no imports from other services)
+      preps.ts           (DB CRUD for prep guides; no imports from other services)
+      reflections.ts     (DB CRUD for reflections; no imports from other services)
+      notes.ts           (DB CRUD for notes; no imports from other services)
+      profile.ts         (DB read/write for resume, experience, user profile; no imports from other services)
+    controllers/
+      applications.ts    (orchestrate extract flow: call extraction service + applications service; no HTTP, no DB)
+      preps.ts           (orchestrate prep guide generation: call claude service + preps service; no HTTP, no DB)
+      reflections.ts     (orchestrate action plan generation: call claude service + reflections service; no HTTP, no DB)
+      notes.ts           (orchestrate note operations: call notes service; no HTTP, no DB)
+      profile.ts         (orchestrate profile operations: call profile service; no HTTP, no DB)
     routes/
-      claude.ts          (proxy routes for all Claude calls)
-      preps.ts
-      reflections.ts
-      notes.ts
-      applications.ts
-      profile.ts         (resume, experience, user profile)
+      applications.ts    (HTTP only: parse req, validate inputs, call applications controller, send res)
+      preps.ts           (HTTP only: parse req, validate inputs, call preps controller, send res)
+      reflections.ts     (HTTP only: parse req, validate inputs, call reflections controller, send res)
+      notes.ts           (HTTP only: parse req, validate inputs, call notes controller, send res)
+      profile.ts         (HTTP only: parse req, validate inputs, call profile controller, send res)
 ```
 
 ---
@@ -146,9 +161,13 @@ A single-page web app (React + TypeScript + Tailwind) that acts as a personal AI
 - Expanded card shows Key Points and Requirements sections
 
 ### Backend Behavior (`POST /api/applications/extract`)
-- Accepts `{ url?, jobDescription?, resume? }`
-- If `url` is provided, fetches the page server-side using Node's `fetch`, parses visible text with `cheerio`, strips nav/footer/boilerplate
-- Combines fetched/pasted JD text and calls Claude to extract:
+- **Route** (`server/routes/applications.ts`): validates inputs, calls applications controller, sends response
+- **Controller** (`server/controllers/applications.ts`) orchestrates the extract flow:
+  1. Calls **extraction service** (`server/services/extraction.ts`) → fetch URL if provided, parse HTML, call Claude → returns `{ company, role, team, keyPoints, requirements }`
+  2. Returns extracted data to the route (not saved yet — client reviews first)
+- On `POST /api/applications` (save), controller calls **applications service** (`server/services/applications.ts`) to persist the confirmed entry
+- Services have no knowledge of each other: extraction handles fetch→parse→Claude, applications handles DB ops only
+- **Claude service** (`server/services/claude.ts` → `extractJobInsights`) returns structured JSON:
   1. Company name and role name
   2. Team name (if explicitly mentioned)
   3. 3–5 key points describing the role
@@ -274,12 +293,27 @@ server/
   .env
   index.ts
   db.ts
-  routes/
+  lib/
+    anthropic.ts
+  services/
+    extraction.ts
     claude.ts
+    applications.ts
     preps.ts
     reflections.ts
     notes.ts
+    profile.ts
+  controllers/
     applications.ts
+    preps.ts
+    reflections.ts
+    notes.ts
+    profile.ts
+  routes/
+    applications.ts
+    preps.ts
+    reflections.ts
+    notes.ts
     profile.ts
 ```
 
