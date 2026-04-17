@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { getProfile, saveProfile } from "../lib/storage"
+import { getProfile, updateProfile } from "../lib/api"
 import type { UserProfile } from "../types"
 
 interface ProfileModalProps {
@@ -11,16 +11,60 @@ const EMPTY_PROFILE: UserProfile = { email: "", linkedin: "", github: "", websit
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [form, setForm] = useState<UserProfile>(EMPTY_PROFILE)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isOpen) setForm(getProfile())
+    if (!isOpen) return
+
+    let isCancelled = false
+
+    async function loadProfile() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const profile = await getProfile()
+        if (!isCancelled) {
+          setForm({
+            email: profile.email,
+            linkedin: profile.linkedin,
+            github: profile.github,
+            website: profile.website,
+          })
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          const message = err instanceof Error ? err.message : "Failed to load profile"
+          setError(message)
+          setForm(EMPTY_PROFILE)
+        }
+      } finally {
+        if (!isCancelled) setIsLoading(false)
+      }
+    }
+
+    void loadProfile()
+
+    return () => {
+      isCancelled = true
+    }
   }, [isOpen])
 
   if (!isOpen) return null
 
-  function handleSave() {
-    saveProfile(form)
-    onClose()
+  async function handleSave() {
+    setIsSaving(true)
+    setError(null)
+    try {
+      await updateProfile(form)
+      onClose()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save profile"
+      setError(message)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -51,24 +95,37 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           <p className="text-sm text-gray-500">
             Saved here for quick reference — handy when filling out applications or prepping for calls.
           </p>
-          <Field label="Email" value={form.email} placeholder="you@example.com" onChange={(v) => handleChange("email", v)} />
-          <Field label="LinkedIn" value={form.linkedin} placeholder="https://linkedin.com/in/yourname" onChange={(v) => handleChange("linkedin", v)} />
-          <Field label="GitHub" value={form.github} placeholder="https://github.com/yourhandle" onChange={(v) => handleChange("github", v)} />
-          <Field label="Personal Website" value={form.website} placeholder="https://yoursite.com" onChange={(v) => handleChange("website", v)} />
+          {error && (
+            <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+          {isLoading ? (
+            <p className="text-sm text-gray-400">Loading profile...</p>
+          ) : (
+            <>
+              <Field label="Email" value={form.email} placeholder="you@example.com" onChange={(v) => handleChange("email", v)} />
+              <Field label="LinkedIn" value={form.linkedin} placeholder="https://linkedin.com/in/yourname" onChange={(v) => handleChange("linkedin", v)} />
+              <Field label="GitHub" value={form.github} placeholder="https://github.com/yourhandle" onChange={(v) => handleChange("github", v)} />
+              <Field label="Personal Website" value={form.website} placeholder="https://yoursite.com" onChange={(v) => handleChange("website", v)} />
+            </>
+          )}
         </div>
         <div className="flex justify-end gap-2 px-5 pb-5">
           <button
             onClick={onClose}
+            disabled={isSaving}
             className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
-              border-gray-300 rounded hover:border-gray-400 transition-colors"
+              border-gray-300 rounded hover:border-gray-400 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm bg-gray-900 text-white rounded hover:bg-gray-700 transition-colors"
+            disabled={isLoading || isSaving}
+            className="px-4 py-2 text-sm bg-gray-900 text-white rounded hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>

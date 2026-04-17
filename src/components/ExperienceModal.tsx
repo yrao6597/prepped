@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { getExperience, saveExperience } from "../lib/storage"
+import { getExperience, saveExperience } from "../lib/api"
 
 interface ExperienceModalProps {
   isOpen: boolean
@@ -8,18 +8,53 @@ interface ExperienceModalProps {
 
 export default function ExperienceModal({ isOpen, onClose }: ExperienceModalProps) {
   const [text, setText] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isOpen) {
-      setText(getExperience())
+    if (!isOpen) return
+
+    let isCancelled = false
+
+    async function loadExperience() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const experience = await getExperience()
+        if (!isCancelled) setText(experience)
+      } catch (err) {
+        if (!isCancelled) {
+          const message = err instanceof Error ? err.message : "Failed to load experience"
+          setError(message)
+          setText("")
+        }
+      } finally {
+        if (!isCancelled) setIsLoading(false)
+      }
+    }
+
+    void loadExperience()
+
+    return () => {
+      isCancelled = true
     }
   }, [isOpen])
 
   if (!isOpen) return null
 
-  function handleSave() {
-    saveExperience(text)
-    onClose()
+  async function handleSave() {
+    setIsSaving(true)
+    setError(null)
+    try {
+      await saveExperience(text)
+      onClose()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save experience"
+      setError(message)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -49,6 +84,14 @@ export default function ExperienceModal({ isOpen, onClose }: ExperienceModalProp
             want to bring up in an interview. This gets used alongside your resume to generate
             more specific prep guides.
           </p>
+          {error && (
+            <div className="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+          {isLoading ? (
+            <p className="text-sm text-gray-400">Loading experience...</p>
+          ) : (
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -56,21 +99,24 @@ export default function ExperienceModal({ isOpen, onClose }: ExperienceModalProp
             className="w-full h-80 border border-gray-300 rounded p-3 text-sm
               focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none font-mono"
           />
+          )}
         </div>
         <div className="flex justify-end gap-2 px-5 pb-5">
           <button
             onClick={onClose}
+            disabled={isSaving}
             className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border
-              border-gray-300 rounded hover:border-gray-400 transition-colors"
+              border-gray-300 rounded hover:border-gray-400 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
+            disabled={isLoading || isSaving}
             className="px-4 py-2 text-sm bg-gray-900 text-white rounded
-              hover:bg-gray-700 transition-colors"
+              hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
