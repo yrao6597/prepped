@@ -4,13 +4,14 @@ import Dashboard from "./components/Dashboard"
 import ResumeModal from "./components/ResumeModal"
 import ExperienceModal from "./components/ExperienceModal"
 import ProfileModal from "./components/ProfileModal"
+import Applications from "./components/Applications"
 import InterviewPrep from "./components/InterviewPrep"
 import RecruiterPrep from "./components/RecruiterPrep"
 import Reflections from "./components/Reflections"
 import Notes from "./components/Notes"
 import type { PrepType } from "./types"
 
-type View = "home" | "interview-prep" | "recruiter-prep" | "reflections" | "notes"
+type View = "home" | "applications" | "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 
 export default function App() {
   const [view, setView] = useState<View>("home")
@@ -35,6 +36,7 @@ export default function App() {
           {view === "home" && (
             <Dashboard onNavigate={(v) => setView(v)} />
           )}
+          {view === "applications" && <Applications />}
           {view === "interview-prep" && (
             <InterviewPrep onNavigate={(v, pt) => { setPrepType(pt); setView(v) }} />
           )}

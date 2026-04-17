@@ -2,7 +2,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { PrepType } from "../types"
 
-type View = "home" | "interview-prep" | "recruiter-prep" | "reflections" | "notes"
+type View = "home" | "applications" | "interview-prep" | "recruiter-prep" | "reflections" | "notes"
 
 interface SidebarProps {
   activeView: View
@@ -56,6 +56,13 @@ export default function Sidebar({ activeView, onNavigate, onSelectPrepType, onOp
           onClick={() => onNavigate("home")}
           icon={<HomeIcon />}
           label="Dashboard"
+        />
+
+        <NavItem
+          isActive={activeNavView === "applications"}
+          onClick={() => onNavigate("applications")}
+          icon={<ApplicationsIcon />}
+          label="Applications"
         />
 
         {/* Interview Prep — expandable */}
@@ -219,6 +226,16 @@ function PrepIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  )
+}
+
+function ApplicationsIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6M9 17h6" />
     </svg>
   )
 }
