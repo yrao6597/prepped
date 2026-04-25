@@ -47,6 +47,7 @@ export default function Applications() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest")
   const [statusUpdateId, setStatusUpdateId] = useState<string | null>(null)
   const [interestUpdateId, setInterestUpdateId] = useState<string | null>(null)
+  const [recentlyMovedId, setRecentlyMovedId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("board")
 
   function handleOpenForm() {
@@ -110,7 +111,15 @@ export default function Applications() {
     }
   }, [])
 
+  const INTEREST_RANK: Record<ApplicationInterestLevel, number> = {
+    "top-choice": 0,
+    "interested": 1,
+    "exploring": 2,
+  }
+
   const sortedApplications = [...applications].sort((a, b) => {
+    const interestDiff = INTEREST_RANK[a.interestLevel] - INTEREST_RANK[b.interestLevel]
+    if (interestDiff !== 0) return interestDiff
     const aTime = new Date(a.applicationDate).getTime()
     const bTime = new Date(b.applicationDate).getTime()
     return sortOrder === "newest" ? bTime - aTime : aTime - bTime
@@ -131,6 +140,8 @@ export default function Applications() {
           application.id === id ? { ...application, status } : application
         )
       )
+      setRecentlyMovedId(id)
+      setTimeout(() => setRecentlyMovedId(null), 1800)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to update application status"
       setError(message)
@@ -365,6 +376,7 @@ export default function Applications() {
                       isExpanded={expandedId === application.id}
                       isUpdatingStatus={statusUpdateId === application.id}
                       isUpdatingInterest={interestUpdateId === application.id}
+                      isRecentlyMoved={recentlyMovedId === application.id}
                       onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
                       onStatusChange={handleStatusChange}
                       onInterestLevelChange={handleInterestLevelChange}
@@ -385,6 +397,7 @@ export default function Applications() {
               isExpanded={expandedId === application.id}
               isUpdatingStatus={statusUpdateId === application.id}
               isUpdatingInterest={interestUpdateId === application.id}
+              isRecentlyMoved={recentlyMovedId === application.id}
               onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
               onStatusChange={handleStatusChange}
               onInterestLevelChange={handleInterestLevelChange}
@@ -402,6 +415,7 @@ function ApplicationCard({
   isExpanded,
   isUpdatingStatus,
   isUpdatingInterest,
+  isRecentlyMoved,
   onToggle,
   onStatusChange,
   onInterestLevelChange,
@@ -411,13 +425,14 @@ function ApplicationCard({
   isExpanded: boolean
   isUpdatingStatus: boolean
   isUpdatingInterest: boolean
+  isRecentlyMoved: boolean
   onToggle: () => void
   onStatusChange: (id: string, status: ApplicationStatus) => void
   onInterestLevelChange: (id: string, interestLevel: ApplicationInterestLevel) => void
   onDelete: () => void
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">
+    <div className={`rounded-xl border p-4 shadow-sm transition-all duration-150 hover:shadow-md hover:bg-primary/5 hover:border-primary/15 ${isRecentlyMoved ? "bg-primary/5 border-primary/15" : "bg-white border-gray-200"}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
