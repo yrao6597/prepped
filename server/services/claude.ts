@@ -6,7 +6,7 @@ const MAX_TOKENS = 4096
 const THINKING_BUDGET = 8000
 
 const PREP_GUIDE_SYSTEM_PROMPT = `You are a job search coach helping a software engineer prepare for a recruiter screening call.
-The user will give you: company name, job title, job description, and optionally their background/resume.
+You will receive a Company Research Brief followed by the job details and candidate background. Use the research brief to make the company snapshot, recruiter questions, and "Why [Company]?" answer specific and grounded — not generic.
 The user may provide a resume AND a separate "My Experience" section with richer detail on specific projects and work. If both are provided, use the experience notes as the primary source of specific talking points and examples — treat the resume as supporting context.
 The user may also provide "Additional Info About This Round" — e.g. tips from the recruiter, what topics to expect, format details. Incorporate this directly into the relevant sections (likely screener questions, red flags, things to prepare).
 Generate a structured prep guide with:
@@ -30,7 +30,42 @@ export interface PrepGuideInput {
   additionalInfo: string
 }
 
+const COMPANY_RESEARCH_SYSTEM_PROMPT = `You are a company research analyst. Given a company name and a role, produce a concise research brief for a software engineer preparing for an interview.
+Cover:
+- What the company does and who their customers are
+- Business model and revenue stage (startup/growth/public, known funding or revenue if notable)
+- Engineering culture signals (tech stack if known, eng blog, open source presence, known practices)
+- Recent news, launches, or strategic shifts relevant to a software engineer
+- Reputation as an employer (Glassdoor signals, known strengths/weaknesses)
+Be factual and specific. Flag anything you are uncertain about. Skip sections where you have no useful signal rather than filling with generics.`
+
+// Phase 1 skill: focused company research that feeds into prep guide generation.
+// Starter implementation uses Claude's training knowledge.
+// To upgrade: replace this call with a web search tool loop (Brave Search API or Anthropic built-in web_search_20250305).
+async function researchCompany(companyName: string, roleTitle: string): Promise<string> {
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: COMPANY_RESEARCH_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: `Company: ${companyName}\nRole I'm interviewing for: ${roleTitle}`,
+      },
+    ],
+  })
+
+  return response.content
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("\n")
+    .trim()
+}
+
 export async function generatePrepGuide(input: PrepGuideInput): Promise<string> {
+  // Phase 1: research the company independently before generating the guide
+  const companyResearch = await researchCompany(input.companyName, input.roleTitle)
+
   const experienceSection = input.experience.trim()
     ? `\nMy Experience / Projects:\n${input.experience}`
     : ""
@@ -39,7 +74,12 @@ export async function generatePrepGuide(input: PrepGuideInput): Promise<string> 
     ? `\nAdditional Info About This Round:\n${input.additionalInfo}`
     : ""
 
-  const userMessage = `Company: ${input.companyName}
+  // Phase 2: generate the prep guide with research context injected
+  const userMessage = `Company Research Brief:
+${companyResearch}
+
+---
+Company: ${input.companyName}
 Role: ${input.roleTitle}
 JD: ${input.jobDescription}
 My Background: ${input.resume}${experienceSection}${additionalInfoSection}`
