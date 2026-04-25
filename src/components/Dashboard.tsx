@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { getApplications, getNotes, getReflections } from "../lib/api"
-import { getPreps } from "../lib/storage"
+import { getApplications, getNotes, getReflections, getPreps } from "../lib/api"
 
 type View = "interview-prep" | "reflections" | "notes"
 
@@ -31,7 +30,7 @@ const fadeUp = (delay: number) => ({
 })
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const prepCount = getPreps().length
+  const [prepCount, setPrepCount] = useState(0)
   const [reflectionCount, setReflectionCount] = useState(0)
   const [noteCount, setNoteCount] = useState(0)
   const [applicationCount, setApplicationCount] = useState(0)
@@ -41,13 +40,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
     async function loadCounts() {
       try {
-        const [reflections, notes, applications] = await Promise.all([
+        const [preps, reflections, notes, applications] = await Promise.all([
+          getPreps(),
           getReflections(),
           getNotes(),
           getApplications(),
         ])
 
         if (!isCancelled) {
+          setPrepCount(preps.length)
           setReflectionCount(reflections.length)
           setNoteCount(notes.length)
           setApplicationCount(applications.length)

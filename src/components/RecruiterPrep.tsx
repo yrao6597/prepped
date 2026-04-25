@@ -1,7 +1,15 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import ReactMarkdown from "react-markdown"
-import { generatePrepGuide } from "../lib/claude"
-import { getResume, saveResume, getExperience, saveExperience, getPreps, savePrep, deletePrep } from "../lib/storage"
+import {
+  generatePrepGuide,
+  getResume,
+  saveResume,
+  getExperience,
+  saveExperience,
+  getPreps,
+  savePrep,
+  deletePrep,
+} from "../lib/api"
 import { printToPdf } from "../lib/pdf"
 import type { AsyncState, PrepGuide, PrepType } from "../types"
 
@@ -39,20 +47,35 @@ interface RecruiterPrepProps {
 }
 
 export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
-  const [preps, setPreps] = useState<PrepGuide[]>(() =>
-    getPreps().filter((p) => (p.prepType ?? "recruiter-call") === prepType)
-  )
+  const [preps, setPreps] = useState<PrepGuide[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [generateState, setGenerateState] = useState<AsyncState<string>>({ status: "idle" })
-  const [useSavedResume, setUseSavedResume] = useState(() => getResume().length > 0)
-  const [useSavedExperience, setUseSavedExperience] = useState(() => getExperience().length > 0)
+  const [savedResume, setSavedResume] = useState("")
+  const [savedExperience, setSavedExperience] = useState("")
+  const [useSavedResume, setUseSavedResume] = useState(false)
+  const [useSavedExperience, setUseSavedExperience] = useState(false)
 
-  const savedResume = getResume()
   const hasSavedResume = savedResume.length > 0
-  const savedExperience = getExperience()
   const hasSavedExperience = savedExperience.length > 0
+
+  const loadPreps = useCallback(async () => {
+    const all = await getPreps()
+    setPreps(all.filter((p) => (p.prepType ?? "recruiter-call") === prepType))
+  }, [prepType])
+
+  useEffect(() => {
+    void loadPreps()
+    void getResume().then((r) => {
+      setSavedResume(r)
+      if (r.length > 0) setUseSavedResume(true)
+    })
+    void getExperience().then((e) => {
+      setSavedExperience(e)
+      if (e.length > 0) setUseSavedExperience(true)
+    })
+  }, [loadPreps])
 
   function handleFieldChange(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -76,8 +99,8 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
     const resumeForSubmit = useSavedResume ? savedResume : form.resume
     const experienceForSubmit = useSavedExperience ? savedExperience : form.experience
 
-    if (!useSavedResume) saveResume(form.resume)
-    if (!useSavedExperience) saveExperience(form.experience)
+    if (!useSavedResume && form.resume) await saveResume(form.resume)
+    if (!useSavedExperience && form.experience) await saveExperience(form.experience)
 
     try {
       const output = await generatePrepGuide({ ...form, resume: resumeForSubmit, experience: experienceForSubmit })
@@ -89,8 +112,8 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
         output,
         prepType,
       }
-      savePrep(entry)
-      setPreps(getPreps().filter((p) => (p.prepType ?? "recruiter-call") === prepType))
+      await savePrep(entry)
+      setPreps((prev) => [entry, ...prev])
       setGenerateState({ status: "idle" })
       setIsFormOpen(false)
       setExpandedId(entry.id)
@@ -100,9 +123,9 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
     }
   }
 
-  function handleDelete(id: string) {
-    deletePrep(id)
-    setPreps(getPreps().filter((p) => (p.prepType ?? "recruiter-call") === prepType))
+  async function handleDelete(id: string) {
+    await deletePrep(id)
+    setPreps((prev) => prev.filter((p) => p.id !== id))
     if (expandedId === id) setExpandedId(null)
   }
 
