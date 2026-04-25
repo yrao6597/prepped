@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { getApplications, getNotes, getReflections, getPreps } from "../lib/api"
 
-type View = "interview-prep" | "reflections" | "notes"
+type View = "interview-prep" | "reflections" | "notes" | "applications"
 
 interface DashboardProps {
   onNavigate: (view: View) => void
@@ -65,11 +65,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
   }, [])
 
-  const stats = [
-    { label: "Prep Guides", value: prepCount, icon: PrepIcon },
-    { label: "Reflections", value: reflectionCount, icon: ReflectIcon },
-    { label: "Notes", value: noteCount, icon: NoteIcon },
-    { label: "Applications", value: applicationCount, icon: AppIcon },
+  const stats: Array<{ label: string; value: number; icon: () => JSX.Element; view: View }> = [
+    { label: "Prep Guides", value: prepCount, icon: PrepIcon, view: "interview-prep" },
+    { label: "Reflections", value: reflectionCount, icon: ReflectIcon, view: "reflections" },
+    { label: "Notes", value: noteCount, icon: NoteIcon, view: "notes" },
+    { label: "Applications", value: applicationCount, icon: AppIcon, view: "applications" },
   ]
 
   const quickActions = [
@@ -105,18 +105,21 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Stat cards */}
       <motion.div {...fadeUp(0.1)} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon }, i) => (
-          <motion.div
+        {stats.map(({ label, value, icon: Icon, view }, i) => (
+          <motion.button
             key={label}
             {...fadeUp(0.1 + i * 0.05)}
-            className="bg-card border border-border rounded-xl p-5 shadow-soft"
+            onClick={() => onNavigate(view)}
+            className="group text-left bg-card border border-border rounded-xl p-5 shadow-soft
+              hover:shadow-lifted hover:border-primary/20 transition-all duration-300"
           >
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mb-4 text-primary">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mb-4
+              text-primary group-hover:bg-primary/10 transition-colors duration-200">
               <Icon />
             </div>
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
             <p className="text-2xl font-bold text-foreground">{value}</p>
-          </motion.div>
+          </motion.button>
         ))}
       </motion.div>
 
