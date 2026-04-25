@@ -3,6 +3,7 @@ import type { Reflection } from "./reflections.js"
 
 const MODEL = "claude-sonnet-4-20250514"
 const MAX_TOKENS = 4096
+const THINKING_BUDGET = 8000
 
 const PREP_GUIDE_SYSTEM_PROMPT = `You are a job search coach helping a software engineer prepare for a recruiter screening call.
 The user will give you: company name, job title, job description, and optionally their background/resume.
@@ -45,7 +46,8 @@ My Background: ${input.resume}${experienceSection}${additionalInfoSection}`
 
   const response = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: MAX_TOKENS,
+    max_tokens: MAX_TOKENS + THINKING_BUDGET,
+    thinking: { type: "enabled", budget_tokens: THINKING_BUDGET },
     system: PREP_GUIDE_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   })
