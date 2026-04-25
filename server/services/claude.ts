@@ -1,25 +1,19 @@
 import { anthropic } from "../lib/anthropic.js"
 import type { Reflection } from "./reflections.js"
+import { SYSTEM_PROMPT as RECRUITER_CALL_PROMPT } from "../prompts/recruiter-call.js"
+import { SYSTEM_PROMPT as TECHNICAL_PROMPT } from "../prompts/technical.js"
+import { SYSTEM_PROMPT as BEHAVIORAL_PROMPT } from "../prompts/behavioral.js"
+import { SYSTEM_PROMPT as COMPANY_RESEARCH_PROMPT } from "../prompts/company-research.js"
 
 const MODEL = "claude-sonnet-4-20250514"
 const MAX_TOKENS = 4096
 const THINKING_BUDGET = 8000
 
-const PREP_GUIDE_SYSTEM_PROMPT = `You are a job search coach helping a software engineer prepare for a recruiter screening call.
-You will receive a Company Research Brief followed by the job details and candidate background. Use the research brief to make the company snapshot, recruiter questions, and "Why [Company]?" answer specific and grounded — not generic.
-The user may provide a resume AND a separate "My Experience" section with richer detail on specific projects and work. If both are provided, use the experience notes as the primary source of specific talking points and examples — treat the resume as supporting context.
-The user may also provide "Additional Info About This Round" — e.g. tips from the recruiter, what topics to expect, format details. Incorporate this directly into the relevant sections (likely screener questions, red flags, things to prepare).
-Generate a structured prep guide with:
-1. Quick Company Snapshot (2-3 sentences: what they do, stage, known for)
-2. Why This Role Is a Fit (based on their background vs JD — be specific, reference their actual projects/experience where relevant)
-3. Top 5 Questions to Ask the Recruiter (thoughtful, shows research)
-4. Likely Screener Questions (3-5 questions). For each question, provide:
-   - Why the recruiter is asking it
-   - A strong 3-5 sentence answer tailored to the candidate's background and the JD
-   - One specific example or detail to mention, drawn from their experience notes if available
-5. Red Flags / Things to Clarify (anything vague or worth probing in JD)
-6. 1-line "Why [Company]?" Answer (genuine, not corporate-sounding)
-Be direct and practical. No fluff.`
+const PREP_GUIDE_PROMPTS: Record<string, string> = {
+  "recruiter-call": RECRUITER_CALL_PROMPT,
+  "technical": TECHNICAL_PROMPT,
+  "behavioral": BEHAVIORAL_PROMPT,
+}
 
 export interface PrepGuideInput {
   companyName: string
@@ -28,25 +22,17 @@ export interface PrepGuideInput {
   resume: string
   experience: string
   additionalInfo: string
+  prepType: "recruiter-call" | "technical" | "behavioral"
 }
 
-const COMPANY_RESEARCH_SYSTEM_PROMPT = `You are a company research analyst. Given a company name and a role, produce a concise research brief for a software engineer preparing for an interview.
-Cover:
-- What the company does and who their customers are
-- Business model and revenue stage (startup/growth/public, known funding or revenue if notable)
-- Engineering culture signals (tech stack if known, eng blog, open source presence, known practices)
-- Recent news, launches, or strategic shifts relevant to a software engineer
-- Reputation as an employer (Glassdoor signals, known strengths/weaknesses)
-Be factual and specific. Flag anything you are uncertain about. Skip sections where you have no useful signal rather than filling with generics.`
-
-// Phase 1 skill: focused company research that feeds into prep guide generation.
+// Phase 1: focused company research that feeds into prep guide generation.
 // Starter implementation uses Claude's training knowledge.
 // To upgrade: replace this call with a web search tool loop (Brave Search API or Anthropic built-in web_search_20250305).
 async function researchCompany(companyName: string, roleTitle: string): Promise<string> {
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1024,
-    system: COMPANY_RESEARCH_SYSTEM_PROMPT,
+    system: COMPANY_RESEARCH_PROMPT,
     messages: [
       {
         role: "user",
@@ -88,7 +74,7 @@ My Background: ${input.resume}${experienceSection}${additionalInfoSection}`
     model: MODEL,
     max_tokens: MAX_TOKENS + THINKING_BUDGET,
     thinking: { type: "enabled", budget_tokens: THINKING_BUDGET },
-    system: PREP_GUIDE_SYSTEM_PROMPT,
+    system: PREP_GUIDE_PROMPTS[input.prepType] ?? RECRUITER_CALL_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   })
 

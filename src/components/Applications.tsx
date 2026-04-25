@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getApplications, updateApplicationInterestLevel, updateApplicationStatus } from "../lib/api"
+import { getApplications, saveApplication, updateApplicationInterestLevel, updateApplicationStatus, deleteApplication } from "../lib/api"
 import type { Application, ApplicationInterestLevel, ApplicationStatus } from "../lib/api"
 
 type SortOrder = "newest" | "oldest"
@@ -28,8 +28,18 @@ const INTEREST_LEVEL_OPTIONS: Array<{ value: ApplicationInterestLevel; label: st
   { value: "exploring", label: "Exploring" },
 ]
 
+const EMPTY_FORM = {
+  company: "",
+  role: "",
+  team: "",
+  url: "",
+  applicationDate: new Date().toISOString().slice(0, 10),
+}
+
 export default function Applications() {
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [form, setForm] = useState({ ...EMPTY_FORM })
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,6 +48,41 @@ export default function Applications() {
   const [statusUpdateId, setStatusUpdateId] = useState<string | null>(null)
   const [interestUpdateId, setInterestUpdateId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("board")
+
+  function handleOpenForm() {
+    setForm({ ...EMPTY_FORM, applicationDate: new Date().toISOString().slice(0, 10) })
+    setError(null)
+    setIsFormOpen(true)
+  }
+
+  async function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
+    try {
+      const now = new Date().toISOString()
+      const entry: Application = {
+        id: crypto.randomUUID(),
+        url: form.url,
+        company: form.company,
+        role: form.role,
+        team: form.team,
+        status: "in-review",
+        interestLevel: "interested",
+        keyPoints: [],
+        requirements: [],
+        applicationDate: new Date(form.applicationDate).toISOString(),
+        createdAt: now,
+      }
+      await saveApplication(entry)
+      setApplications((prev) => [entry, ...prev])
+      setIsFormOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save application")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     let isCancelled = false
@@ -94,6 +139,17 @@ export default function Applications() {
     }
   }
 
+  async function handleDelete(id: string) {
+    setError(null)
+    try {
+      await deleteApplication(id)
+      setApplications((prev) => prev.filter((a) => a.id !== id))
+      if (expandedId === id) setExpandedId(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete application")
+    }
+  }
+
   async function handleInterestLevelChange(id: string, interestLevel: ApplicationInterestLevel) {
     setInterestUpdateId(id)
     setError(null)
@@ -124,7 +180,7 @@ export default function Applications() {
 
         {!isFormOpen && (
           <button
-            onClick={() => setIsFormOpen(true)}
+            onClick={handleOpenForm}
             className="shrink-0 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-gray-700"
           >
             + Add Application
@@ -183,38 +239,66 @@ export default function Applications() {
       )}
 
       {isFormOpen && (
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-semibold text-gray-900">New Application</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Paste a job link or description and we&apos;ll build this out next.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsFormOpen(false)}
-              className="text-sm text-gray-400 transition-colors hover:text-gray-700"
-            >
-              Cancel
-            </button>
-          </div>
+        <form onSubmit={handleFormSubmit} className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 font-semibold text-gray-900">New Application</h2>
 
           <div className="grid gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Job Posting URL</label>
-              <input
-                type="text"
-                placeholder="https://company.com/careers/role"
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Company <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  required
+                  value={form.company}
+                  onChange={(e) => setForm((prev) => ({ ...prev, company: e.target.value }))}
+                  placeholder="e.g. Stripe"
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Role <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  required
+                  value={form.role}
+                  onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))}
+                  placeholder="e.g. Senior Software Engineer"
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Team <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input
+                  type="text"
+                  value={form.team}
+                  onChange={(e) => setForm((prev) => ({ ...prev, team: e.target.value }))}
+                  placeholder="e.g. Payments Infrastructure"
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Application Date <span className="text-red-400">*</span></label>
+                <input
+                  type="date"
+                  required
+                  value={form.applicationDate}
+                  onChange={(e) => setForm((prev) => ({ ...prev, applicationDate: e.target.value }))}
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Job Description</label>
-              <textarea
-                placeholder="Optional for now. Paste the job description here if you want to save or extract from text later."
-                rows={6}
-                className="w-full resize-y rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+              <label className="mb-1 block text-sm font-medium text-gray-700">Job Posting URL <span className="text-gray-400 font-normal">(optional)</span></label>
+              <input
+                type="url"
+                value={form.url}
+                onChange={(e) => setForm((prev) => ({ ...prev, url: e.target.value }))}
+                placeholder="https://company.com/careers/role"
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
               />
             </div>
 
@@ -222,19 +306,21 @@ export default function Applications() {
               <button
                 type="button"
                 onClick={() => setIsFormOpen(false)}
-                className="rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-600 transition-all duration-150 hover:border-gray-400 hover:text-gray-900"
+                disabled={isSubmitting}
+                className="rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-600 transition-all duration-150 hover:border-gray-400 hover:text-gray-900 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                type="button"
-                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-gray-700"
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Extract Info
+                {isSubmitting ? "Saving..." : "Save Application"}
               </button>
             </div>
           </div>
-        </div>
+        </form>
       )}
 
       {isLoading ? (
@@ -282,6 +368,7 @@ export default function Applications() {
                       onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
                       onStatusChange={handleStatusChange}
                       onInterestLevelChange={handleInterestLevelChange}
+                      onDelete={() => { if (confirm("Delete this application?")) void handleDelete(application.id) }}
                     />
                   ))}
                 </div>
@@ -301,6 +388,7 @@ export default function Applications() {
               onToggle={() => setExpandedId(expandedId === application.id ? null : application.id)}
               onStatusChange={handleStatusChange}
               onInterestLevelChange={handleInterestLevelChange}
+              onDelete={() => { if (confirm("Delete this application?")) void handleDelete(application.id) }}
             />
           ))}
         </div>
@@ -317,6 +405,7 @@ function ApplicationCard({
   onToggle,
   onStatusChange,
   onInterestLevelChange,
+  onDelete,
 }: {
   application: Application
   isExpanded: boolean
@@ -325,6 +414,7 @@ function ApplicationCard({
   onToggle: () => void
   onStatusChange: (id: string, status: ApplicationStatus) => void
   onInterestLevelChange: (id: string, interestLevel: ApplicationInterestLevel) => void
+  onDelete: () => void
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">
@@ -360,22 +450,34 @@ function ApplicationCard({
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onToggle}
-          className="shrink-0 rounded-md border border-gray-200 p-1.5 text-gray-400 transition-colors hover:border-gray-400 hover:text-gray-700"
-          aria-label={isExpanded ? "Collapse application" : "Expand application"}
-        >
-          <svg
-            className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={onDelete}
+            className="rounded-md border border-gray-200 p-1.5 text-gray-300 transition-colors hover:border-red-200 hover:text-red-400"
+            aria-label="Delete application"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="rounded-md border border-gray-200 p-1.5 text-gray-400 transition-colors hover:border-gray-400 hover:text-gray-700"
+            aria-label={isExpanded ? "Collapse application" : "Expand application"}
+          >
+            <svg
+              className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">

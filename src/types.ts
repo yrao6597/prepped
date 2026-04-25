@@ -16,6 +16,7 @@ export interface PrepGuideInput {
   resume: string
   experience: string
   additionalInfo: string
+  prepType: "recruiter-call" | "technical" | "behavioral"
 }
 
 export type InterviewOutcome = "passed" | "failed" | "pending"

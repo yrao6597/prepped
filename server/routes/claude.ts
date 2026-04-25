@@ -7,8 +7,12 @@ function isOutcome(value: unknown): value is "passed" | "failed" | "pending" {
   return value === "passed" || value === "failed" || value === "pending"
 }
 
+function isPrepType(value: unknown): value is "recruiter-call" | "technical" | "behavioral" {
+  return value === "recruiter-call" || value === "technical" || value === "behavioral"
+}
+
 claudeRouter.post("/prep-guide", async (req, res) => {
-  const { companyName, roleTitle, jobDescription, resume, experience, additionalInfo } =
+  const { companyName, roleTitle, jobDescription, resume, experience, additionalInfo, prepType } =
     req.body as Record<string, unknown>
 
   if (
@@ -17,10 +21,11 @@ claudeRouter.post("/prep-guide", async (req, res) => {
     typeof jobDescription !== "string" ||
     typeof resume !== "string" ||
     typeof experience !== "string" ||
-    typeof additionalInfo !== "string"
+    typeof additionalInfo !== "string" ||
+    !isPrepType(prepType)
   ) {
     res.status(400).json({
-      error: "companyName, roleTitle, jobDescription, resume, experience, and additionalInfo are required strings",
+      error: "companyName, roleTitle, jobDescription, resume, experience, additionalInfo are required strings; prepType must be 'recruiter-call', 'technical', or 'behavioral'",
     })
     return
   }
@@ -33,6 +38,7 @@ claudeRouter.post("/prep-guide", async (req, res) => {
       resume,
       experience,
       additionalInfo,
+      prepType,
     })
     res.json(output)
   } catch (error) {

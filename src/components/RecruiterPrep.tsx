@@ -103,7 +103,7 @@ export default function RecruiterPrep({ prepType }: RecruiterPrepProps) {
     if (!useSavedExperience && form.experience) await saveExperience(form.experience)
 
     try {
-      const output = await generatePrepGuide({ ...form, resume: resumeForSubmit, experience: experienceForSubmit })
+      const output = await generatePrepGuide({ ...form, resume: resumeForSubmit, experience: experienceForSubmit, prepType })
       const entry: PrepGuide = {
         id: crypto.randomUUID(),
         date: new Date().toISOString(),
