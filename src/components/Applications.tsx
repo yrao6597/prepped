@@ -36,7 +36,11 @@ const EMPTY_FORM = {
   applicationDate: new Date().toISOString().slice(0, 10),
 }
 
-export default function Applications() {
+interface ApplicationsProps {
+  onSelectApplication: (id: string) => void
+}
+
+export default function Applications({ onSelectApplication }: ApplicationsProps) {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -381,6 +385,7 @@ export default function Applications() {
                       onStatusChange={handleStatusChange}
                       onInterestLevelChange={handleInterestLevelChange}
                       onDelete={() => { if (confirm("Delete this application?")) void handleDelete(application.id) }}
+                      onSelect={() => onSelectApplication(application.id)}
                     />
                   ))}
                 </div>
@@ -402,6 +407,7 @@ export default function Applications() {
               onStatusChange={handleStatusChange}
               onInterestLevelChange={handleInterestLevelChange}
               onDelete={() => { if (confirm("Delete this application?")) void handleDelete(application.id) }}
+              onSelect={() => onSelectApplication(application.id)}
             />
           ))}
         </div>
@@ -420,6 +426,7 @@ function ApplicationCard({
   onStatusChange,
   onInterestLevelChange,
   onDelete,
+  onSelect,
 }: {
   application: Application
   isExpanded: boolean
@@ -430,11 +437,12 @@ function ApplicationCard({
   onStatusChange: (id: string, status: ApplicationStatus) => void
   onInterestLevelChange: (id: string, interestLevel: ApplicationInterestLevel) => void
   onDelete: () => void
+  onSelect: () => void
 }) {
   return (
     <div className={`rounded-xl border p-4 shadow-sm transition-all duration-150 hover:shadow-md hover:bg-primary/5 hover:border-primary/15 ${isRecentlyMoved ? "bg-primary/5 border-primary/15" : "bg-white border-gray-200"}`}>
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        <button type="button" onClick={onSelect} className="min-w-0 text-left flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="text-sm font-semibold text-gray-900">{application.company}</h2>
             <span className="text-sm text-gray-300">·</span>
@@ -464,7 +472,7 @@ function ApplicationCard({
               </>
             )}
           </div>
-        </div>
+        </button>
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
